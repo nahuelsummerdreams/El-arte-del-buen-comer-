@@ -15,6 +15,7 @@ import { formatearPesos } from "@/lib/precios";
 import { BarrasMedios } from "./barras-medios";
 import { FiltroPeriodo, type Periodo } from "./filtro-periodo";
 import { GraficoVentas } from "./grafico-ventas";
+import { RelojInicio } from "./reloj-inicio";
 import { ListaDeudas, type DeudaVisible } from "./lista-deudas";
 import { EnlacePerdida, ListaVencimientos } from "./lista-vencimientos";
 import { ListaReponer } from "./lista-reponer";
@@ -45,11 +46,11 @@ export function Fallo({ texto }: { texto: string }) {
   return <p role="alert" className="rounded-xl border border-red-400/40 bg-red-400/10 px-4 py-3 text-red-200">{texto}</p>;
 }
 
-export function Encabezado({ nombre, hoy, cajaAbiertaDesde }: { nombre: string; hoy: string; cajaAbiertaDesde: string | null }) {
+export function Encabezado({ nombre, hoy, cajaAbiertaDesde, ahora }: { nombre: string; hoy: string; cajaAbiertaDesde: string | null; ahora?: string }) {
   return (
     <header className="flex flex-wrap items-end justify-between gap-4">
       <div>
-        <p className="text-sm text-crema/60">{mayuscula(etiquetaDiaLarga(hoy))}</p>
+        {ahora ? <RelojInicio ahoraInicial={ahora} /> : <p className="text-sm text-crema/60">{mayuscula(etiquetaDiaLarga(hoy))}</p>}
         <h1 className="mt-1 font-display text-3xl tracking-tight sm:text-4xl">Hola, {nombre}</h1>
         <p className="mt-2 flex items-center gap-2 text-sm text-crema/65">
           <span aria-hidden className={`h-2.5 w-2.5 rounded-full ${cajaAbiertaDesde ? "bg-emerald-400" : "bg-crema/35"}`} />
@@ -70,6 +71,8 @@ export function Encabezado({ nombre, hoy, cajaAbiertaDesde }: { nombre: string; 
 
 export type DatosPanelDueno = {
   nombre: string;
+  /** Instante actual (ISO), para el reloj del inicio. */
+  ahora: string;
   /** Hoy, como "AAAA-MM-DD" en hora de Argentina. */
   hoy: string;
   periodo: Periodo;
@@ -104,7 +107,7 @@ export function VistaPanelDueno(d: DatosPanelDueno) {
 
   return (
     <div className="space-y-6">
-      <Encabezado nombre={d.nombre} hoy={d.hoy} cajaAbiertaDesde={d.cajaAbiertaDesde} />
+      <Encabezado nombre={d.nombre} hoy={d.hoy} cajaAbiertaDesde={d.cajaAbiertaDesde} ahora={d.ahora} />
 
       <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-[1.5fr_1fr_1fr_1fr]">
         <TarjetaIndicador

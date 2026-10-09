@@ -1,5 +1,6 @@
 "use client";
 
+import Image from "next/image";
 import { useEffect, useRef, useState, type FormEvent, type KeyboardEvent } from "react";
 import { Icono } from "@/components/icono";
 import { MAX_LARGO_MENSAJE } from "@/lib/asistente/conversacion";
@@ -124,10 +125,10 @@ export function Asistente({ rol, nombre }: { rol: "dueno" | "cajero"; nombre: st
         aria-label={abierto ? "Cerrar el asistente" : "Abrir el asistente"}
         aria-expanded={abierto}
         data-asistente-boton
-        className="fx-asistente-boton fixed bottom-5 right-5 z-40 grid h-14 w-14 place-items-center rounded-full bg-miel text-white shadow-xl shadow-black/30 transition hover:scale-105 active:scale-95 max-sm:bottom-4 max-sm:right-4"
+        className="fx-asistente-boton fixed bottom-5 right-5 z-40 grid h-14 w-14 place-items-center overflow-hidden rounded-full bg-madera text-white shadow-xl shadow-black/30 ring-2 ring-miel transition hover:scale-105 active:scale-95 max-sm:bottom-4 max-sm:right-4"
       >
         <span className="fx-giro grid place-items-center" key={abierto ? "x" : "a"}>
-          <Icono nombre={abierto ? "cerrar" : "asistente"} className="h-6 w-6" />
+          {abierto ? <Icono nombre="cerrar" className="h-6 w-6" /> : <Image src="/logo.jpg" alt="" width={754} height={765} className="h-14 w-14 object-cover" />}
         </span>
       </button>
 
@@ -139,8 +140,8 @@ export function Asistente({ rol, nombre }: { rol: "dueno" | "cajero"; nombre: st
           className="fx-panel-asistente fixed bottom-24 right-5 z-40 flex h-[min(34rem,calc(100dvh-8rem))] w-[min(24rem,calc(100vw-2.5rem))] flex-col overflow-hidden rounded-2xl border border-crema/15 bg-tinta/95 shadow-2xl shadow-black/40 backdrop-blur-xl max-sm:bottom-20 max-sm:right-4 max-sm:w-[calc(100vw-2rem)]"
         >
           <header className="flex items-center gap-3 border-b border-crema/10 px-4 py-3">
-            <span className="fx-brillo grid h-9 w-9 shrink-0 place-items-center rounded-full bg-miel text-white">
-              <Icono nombre="asistente" className="h-5 w-5" />
+            <span className="fx-brillo relative grid h-10 w-10 shrink-0 place-items-center overflow-hidden rounded-full ring-2 ring-miel">
+              <Image src="/logo.jpg" alt="" width={754} height={765} className="h-10 w-10 object-cover" />
             </span>
             <div className="min-w-0 flex-1">
               <p className="font-display text-lg leading-tight">Asistente</p>
@@ -156,7 +157,7 @@ export function Asistente({ rol, nombre }: { rol: "dueno" | "cajero"; nombre: st
           <div className="flex-1 space-y-3 overflow-y-auto px-4 py-4 text-sm" aria-live="polite">
             {mensajes.length === 0 && (
               <div className="fx-entra">
-                <p className="text-base">Hola{primerNombre ? `, ${primerNombre}` : ""} 👋</p>
+                <p className="text-base">Hola{primerNombre ? `, ${primerNombre}` : ""}</p>
                 <p className="mt-1 text-crema/65">Preguntame cómo se hace algo o cómo viene el negocio. Por ejemplo:</p>
                 <div className="mt-3 flex flex-wrap gap-2">
                   {SUGERENCIAS[rol].map((s, i) => (
@@ -180,7 +181,8 @@ export function Asistente({ rol, nombre }: { rol: "dueno" | "cajero"; nombre: st
                   <p className="max-w-[85%] whitespace-pre-wrap rounded-2xl rounded-br-md bg-crema px-3.5 py-2 text-tinta">{m.content}</p>
                 </div>
               ) : (
-                <div key={i} className="fx-mensaje flex">
+                <div key={i} className="fx-mensaje flex items-end gap-2">
+                  <Image src="/logo.jpg" alt="" width={754} height={765} className="mb-1 h-6 w-6 shrink-0 rounded-full object-cover ring-1 ring-miel/60" />
                   <div
                     data-respuesta
                     className={`max-w-[92%] rounded-2xl rounded-bl-md border px-3.5 py-2.5 ${m.error ? "border-red-400/40 bg-red-400/10 text-red-200" : "border-crema/10 bg-white/[0.04]"}`}
@@ -192,7 +194,8 @@ export function Asistente({ rol, nombre }: { rol: "dueno" | "cajero"; nombre: st
             )}
 
             {pensando && (
-              <div className="fx-mensaje flex" data-pensando aria-label="El asistente está pensando">
+              <div className="fx-mensaje flex items-end gap-2" data-pensando aria-label="El asistente está pensando">
+                <Image src="/logo.jpg" alt="" width={754} height={765} className="mb-1 h-6 w-6 shrink-0 rounded-full object-cover ring-1 ring-miel/60" />
                 <span className="flex items-center gap-1.5 rounded-2xl rounded-bl-md border border-crema/10 bg-white/[0.04] px-4 py-3">
                   {[0, 1, 2].map((i) => (
                     <span key={i} style={{ animationDelay: `${i * 150}ms` }} className="fx-punto h-2 w-2 rounded-full bg-miel" />

@@ -15,6 +15,7 @@ const MENU: Item[] = [
   { href: "/", etiqueta: "Panel", icono: "panel" },
   { href: "/venta", etiqueta: "Vender", icono: "vender" },
   { href: "/caja", etiqueta: "Caja", icono: "caja" },
+  { href: "/calendario", etiqueta: "Calendario", icono: "calendario" },
 ];
 const CATALOGO: Item[] = [
   { href: "/productos", etiqueta: "Productos", icono: "productos" },

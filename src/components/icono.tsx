@@ -142,6 +142,14 @@ const TRAZOS = {
       <path d="m21.854 2.147-10.94 10.939" />
     </>
   ),
+  calendario: (
+    <>
+      <path d="M8 2v4" />
+      <path d="M16 2v4" />
+      <rect x="3" y="4" width="18" height="18" rx="2" />
+      <path d="M3 10h18" />
+    </>
+  ),
   ticket: (
     <>
       <path d="M4 2v20l2-1 2 1 2-1 2 1 2-1 2 1 2-1 2 1V2l-2 1-2-1-2 1-2-1-2 1-2-1-2 1Z" />

@@ -93,7 +93,7 @@ html[data-tema="claro"] .text-amber-300 {
 .fx-panel-asistente { animation: fx-abrir 0.28s cubic-bezier(0.2, 0.8, 0.2, 1) both; transform-origin: bottom right; }
 .fx-giro { animation: fx-girar 0.3s ease both; }
 .fx-punto { animation: fx-rebote 1.1s ease-in-out infinite; }
-.fx-asistente-boton { animation: fx-pulso 2.8s ease-out 1.2s infinite; background-image: linear-gradient(135deg, #c98a4b, #a8651f); }
+.fx-asistente-boton { animation: fx-pulso 2.8s ease-out 1.2s infinite; }
 .fx-brillo { background-image: linear-gradient(110deg, transparent 30%, rgb(255 255 255 / 0.45) 50%, transparent 70%), linear-gradient(135deg, #c98a4b, #a8651f); background-size: 250% 100%, 100% 100%; background-repeat: no-repeat; animation: fx-reflejo 3.2s ease-in-out infinite; }
 .fx-respirar { animation: fx-respirar 7s ease-in-out infinite; }
 

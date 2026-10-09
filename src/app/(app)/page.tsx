@@ -80,7 +80,7 @@ async function PanelDueno({ supabase, nombre, periodo }: { supabase: Supabase; n
   ) {
     return (
       <div className="space-y-6">
-        <Encabezado nombre={nombre} hoy={hoy} cajaAbiertaDesde={null} />
+        <Encabezado nombre={nombre} hoy={hoy} cajaAbiertaDesde={null} ahora={new Date().toISOString()} />
         <Fallo texto="No pudimos cargar los números del panel. Intentá de nuevo en un momento." />
       </div>
     );
@@ -129,6 +129,7 @@ async function PanelDueno({ supabase, nombre, periodo }: { supabase: Supabase; n
       vencimientos={vencimientos}
       deudas={deudas}
       nombre={nombre}
+      ahora={new Date().toISOString()}
       hoy={hoy}
       periodo={periodo}
       serie={serie}
@@ -153,7 +154,7 @@ async function PanelCajero({ supabase, nombre }: { supabase: Supabase; nombre: s
 
   return (
     <div className="space-y-6">
-      <Encabezado nombre={nombre} hoy={hoy} cajaAbiertaDesde={turno?.abierto_en ?? null} />
+      <Encabezado nombre={nombre} hoy={hoy} cajaAbiertaDesde={turno?.abierto_en ?? null} ahora={new Date().toISOString()} />
       {ventasRes.error || !mias ? (
         <Fallo texto="No pudimos cargar tus ventas de hoy. Intentá de nuevo en un momento." />
       ) : (
