@@ -282,10 +282,14 @@ export type Database = {
         Row: {
           anulada_en: string | null;
           anulada_por: string | null;
+          clave_idempotencia: string | null;
           creado_en: string;
+          descuento_centavos: number;
+          descuento_por: string | null;
           estado: Database["public"]["Enums"]["estado_venta"];
           id: number;
           motivo_anulacion: string | null;
+          subtotal_centavos: number;
           total_centavos: number;
           turno_id: number;
           usuario_id: string;
@@ -293,10 +297,14 @@ export type Database = {
         Insert: {
           anulada_en?: string | null;
           anulada_por?: string | null;
+          clave_idempotencia?: string | null;
           creado_en?: string;
+          descuento_centavos?: number;
+          descuento_por?: string | null;
           estado?: Database["public"]["Enums"]["estado_venta"];
           id?: never;
           motivo_anulacion?: string | null;
+          subtotal_centavos?: number;
           total_centavos: number;
           turno_id: number;
           usuario_id: string;
@@ -304,10 +312,14 @@ export type Database = {
         Update: {
           anulada_en?: string | null;
           anulada_por?: string | null;
+          clave_idempotencia?: string | null;
           creado_en?: string;
+          descuento_centavos?: number;
+          descuento_por?: string | null;
           estado?: Database["public"]["Enums"]["estado_venta"];
           id?: never;
           motivo_anulacion?: string | null;
+          subtotal_centavos?: number;
           total_centavos?: number;
           turno_id?: number;
           usuario_id?: string;
@@ -346,8 +358,25 @@ export type Database = {
         };
         Returns: number;
       };
+      cerrar_caja: {
+        Args: { p_efectivo_contado_centavos: number; p_nota: string; p_turno_id: number };
+        Returns: Json;
+      };
       es_dueno: { Args: never; Returns: boolean };
       es_personal: { Args: never; Returns: boolean };
+      registrar_movimiento_caja: {
+        Args: {
+          p_monto_centavos: number;
+          p_motivo: string;
+          p_tipo: Database["public"]["Enums"]["tipo_mov_caja"];
+        };
+        Returns: number;
+      };
+      registrar_venta: {
+        Args: { p_clave: string; p_descuento_centavos: number; p_items: Json; p_pagos: Json };
+        Returns: number;
+      };
+      resumen_turno: { Args: { p_turno_id: number }; Returns: Json };
     };
     Enums: {
       estado_venta: "completada" | "anulada";
