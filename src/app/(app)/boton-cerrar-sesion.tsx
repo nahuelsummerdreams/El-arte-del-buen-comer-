@@ -1,6 +1,7 @@
 "use client";
 
-import { cerrarSesion } from "./login/actions";
+import { Icono } from "@/components/icono";
+import { cerrarSesion } from "@/app/login/actions";
 
 /**
  * Cierra la sesión y hace una recarga COMPLETA hacia /login.
@@ -10,7 +11,7 @@ import { cerrarSesion } from "./login/actions";
  * persona anterior (compu compartida del local) y mostrar el login "viejo" sin el email
  * recordado. Una navegación completa vacía todo lo que el navegador tenía en memoria.
  */
-export function BotonCerrarSesion() {
+export function BotonCerrarSesion({ className, etiquetaCorta = false }: { className?: string; etiquetaCorta?: boolean }) {
   async function salir() {
     await cerrarSesion();
     // Excepción a propósito a la regla de Next: acá SÍ queremos una recarga completa (ver arriba).
@@ -20,11 +21,9 @@ export function BotonCerrarSesion() {
 
   return (
     <form action={salir}>
-      <button
-        type="submit"
-        className="rounded-lg border border-crema/30 px-4 py-2 text-sm transition hover:bg-white/5"
-      >
-        Cerrar sesión
+      <button type="submit" className={className ?? "rounded-lg border border-crema/30 px-4 py-2 text-sm transition hover:bg-white/5"}>
+        <Icono nombre="salir" className="h-4 w-4" />
+        {etiquetaCorta ? "Salir" : "Cerrar sesión"}
       </button>
     </form>
   );

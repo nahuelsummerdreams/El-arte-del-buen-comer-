@@ -7,6 +7,9 @@
   --color-tinta: #1c1a18;
   --color-crema: #e8dfc9;
   --color-madera: #6b4226;
+  /* Madera aclarada para dibujar en gráficos: la madera original contrasta solo 1,8:1 sobre fondo
+     oscuro (el mínimo es 3:1). Validada con el script de la guía de visualización: 4,2:1. */
+  --color-miel: #b8753a;
   /* Tipografía de títulos ("Bienvenido"): clase `font-display`. Georgia es el plan B si no carga. */
   --font-display: var(--font-playfair), Georgia, serif;
 }

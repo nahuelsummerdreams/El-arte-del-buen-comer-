@@ -132,3 +132,34 @@ export function productosParaReponer(productos: readonly ProductoConStock[], lim
     .sort((a, b) => a.stock - b.stock || a.nombre.localeCompare(b.nombre, "es"))
     .slice(0, limite);
 }
+
+// ------------------------------------------------------------- eje vertical
+/**
+ * Escala "limpia" para el eje vertical de un gráfico: el máximo se redondea hacia ARRIBA a
+ * 1, 2, 2,5, 5 o 10 × una potencia de diez, y se reparten 5 marcas parejas (0 … máximo).
+ * Todo en centavos. Sin ventas, un eje de $100 para que el gráfico no quede vacío.
+ */
+export function escalaLimpia(maximoCentavos: number): { max: number; ticks: number[] } {
+  if (!(maximoCentavos > 0)) return { max: 10_000, ticks: [0, 2_500, 5_000, 7_500, 10_000] };
+
+  let potencia = 1;
+  while (potencia * 10 <= maximoCentavos) potencia *= 10;
+  const mantisa = maximoCentavos / potencia; // entre 1 (incluido) y 10 (excluido)
+  const paso = [1, 2, 2.5, 5, 10].find((p) => mantisa <= p) ?? 10;
+
+  const max = Math.round(paso * potencia);
+  // 5 marcas parejas: 0, ¼, ½, ¾ y el máximo (la última es exactamente `max`).
+  return { max, ticks: [0, 1, 2, 3, 4].map((i) => Math.round((max * i) / 4)) };
+}
+
+// ------------------------------------------------------------------- avatar
+/** "Nicolás Maciel" → "NM" (hasta dos letras). Sin nombre, "?". */
+export function iniciales(nombre: string): string {
+  const letras = nombre
+    .trim()
+    .split(/\s+/)
+    .filter(Boolean)
+    .slice(0, 2)
+    .map((palabra) => Array.from(palabra)[0].toLocaleUpperCase("es-AR"));
+  return letras.length > 0 ? letras.join("") : "?";
+}

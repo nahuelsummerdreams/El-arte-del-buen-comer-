@@ -1,6 +1,8 @@
 import { describe, expect, test } from "vitest";
 import {
   abreviarPesos,
+  escalaLimpia,
+  iniciales,
   escalarBarras,
   etiquetaDiaCorta,
   etiquetaDiaLarga,
@@ -181,4 +183,51 @@ describe("productosParaReponer", () => {
   test("sin productos para reponer → lista vacía", () => {
     expect(productosParaReponer([p(1, "A", 50, 10)], 10)).toEqual([]);
   });
+});
+
+describe("escalaLimpia · eje vertical con números redondos (todo en centavos)", () => {
+  test.each([
+    [1_750_018, 2_000_000], //   $17.500 → eje hasta $20.000
+    [2_000_000, 2_000_000], //   justo en un número redondo: no se agranda
+    [2_000_001, 2_500_000],
+    [2_400_000, 2_500_000],
+    [3_000_000, 5_000_000],
+    [5_000_000, 5_000_000],
+    [5_000_001, 10_000_000],
+    [10_000_000, 10_000_000],
+    [9_999, 10_000],
+    [1, 1],
+    [123_456_789, 200_000_000],
+  ])("máximo %i → el eje llega a %i", (maximo, esperado) => {
+    expect(escalaLimpia(maximo).max).toBe(esperado);
+  });
+
+  test("sin ventas: eje por defecto de $100 (no queda vacío ni divide por cero)", () => {
+    expect(escalaLimpia(0).max).toBe(10_000);
+    expect(escalaLimpia(-5).max).toBe(10_000);
+  });
+
+  test("5 marcas parejas, de 0 al máximo", () => {
+    expect(escalaLimpia(1_750_018).ticks).toEqual([0, 500_000, 1_000_000, 1_500_000, 2_000_000]);
+  });
+
+  test("el eje SIEMPRE alcanza al valor máximo (ninguna barra se sale)", () => {
+    for (const v of [1, 7, 99, 100, 101, 999, 1000, 4999, 5001, 12_345, 987_654, 3_333_333]) {
+      const { max, ticks } = escalaLimpia(v);
+      expect(max).toBeGreaterThanOrEqual(v);
+      expect(ticks[ticks.length - 1]).toBe(max);
+    }
+  });
+});
+
+describe("iniciales · para el avatar", () => {
+  test.each([
+    ["Nicolás Maciel", "NM"],
+    ["nicolás maciel", "NM"],
+    ["Dueño", "D"],
+    ["  María   José  García ", "MJ"], // solo las dos primeras palabras
+    ["Álvaro", "Á"],
+    ["", "?"],
+    ["   ", "?"],
+  ])("«%s» → «%s»", (nombre, esperado) => expect(iniciales(nombre)).toBe(esperado));
 });
