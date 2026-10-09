@@ -83,6 +83,7 @@ export type Database = {
       movimientos_stock: {
         Row: {
           cantidad: number;
+          clave_idempotencia: string | null;
           creado_en: string;
           id: number;
           motivo: string | null;
@@ -93,6 +94,7 @@ export type Database = {
         };
         Insert: {
           cantidad: number;
+          clave_idempotencia?: string | null;
           creado_en?: string;
           id?: never;
           motivo?: string | null;
@@ -103,6 +105,7 @@ export type Database = {
         };
         Update: {
           cantidad?: number;
+          clave_idempotencia?: string | null;
           creado_en?: string;
           id?: never;
           motivo?: string | null;

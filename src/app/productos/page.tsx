@@ -22,7 +22,7 @@ async function Contenido({ searchParams }: { searchParams: PageProps<"/productos
   const sesion = await obtenerSesion();
   if (!sesion) redirect("/login");
   const { supabase, perfil } = sesion;
-  const { creado } = await searchParams;
+  const { creado, ingreso } = await searchParams;
 
   // Tres consultas en paralelo (no una después de otra).
   const [productos, categorias, stocks] = await Promise.all([
@@ -63,18 +63,32 @@ async function Contenido({ searchParams }: { searchParams: PageProps<"/productos
       <div className="mb-6 mt-3 flex items-end justify-between gap-4">
         <h1 className="text-3xl font-semibold tracking-tight">Productos</h1>
         {perfil.rol === "dueno" && (
-          <Link
-            href="/productos/nuevo"
-            className="rounded-lg bg-crema px-4 py-2 text-sm font-medium text-tinta transition hover:bg-crema/90"
-          >
-            + Nuevo producto
-          </Link>
+          <div className="flex flex-wrap justify-end gap-2">
+            <Link
+              href="/inventario/ingreso"
+              className="rounded-lg border border-crema/30 px-4 py-2 text-sm transition hover:bg-white/5"
+            >
+              Ingresar mercadería
+            </Link>
+            <Link
+              href="/productos/nuevo"
+              className="rounded-lg bg-crema px-4 py-2 text-sm font-medium text-tinta transition hover:bg-crema/90"
+            >
+              + Nuevo producto
+            </Link>
+          </div>
         )}
       </div>
 
       {creado === "1" && (
         <p role="status" className="mb-4 rounded-lg border border-emerald-400/40 bg-emerald-400/10 px-4 py-2 text-sm text-emerald-200">
           Producto creado correctamente.
+        </p>
+      )}
+
+      {ingreso === "1" && (
+        <p role="status" className="mb-4 rounded-lg border border-emerald-400/40 bg-emerald-400/10 px-4 py-2 text-sm text-emerald-200">
+          Ingreso de mercadería registrado.
         </p>
       )}
 
