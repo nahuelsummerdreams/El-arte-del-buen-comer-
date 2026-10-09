@@ -28,6 +28,12 @@ export default function Panel() {
         >
           Productos
         </Link>
+        <Link
+          href="/caja"
+          className="rounded-lg border border-crema/30 px-5 py-2.5 text-sm font-medium transition hover:bg-white/5"
+        >
+          Caja
+        </Link>
         <Link href="/cuenta/contrasena" className="text-sm text-crema/60 underline-offset-4 transition hover:text-crema hover:underline">
           Cambiar contraseña
         </Link>
