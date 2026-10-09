@@ -59,8 +59,8 @@ export function GraficoVentas({ dias }: { dias: DiaVenta[] }) {
                 className="group flex h-full items-end justify-center px-[2px] outline-none"
               >
                 <span
-                  className={`block w-full max-w-6 rounded-t-[4px] transition-colors ${activo === i ? "bg-[#d08a4b]" : "bg-miel"} ${activo !== null && activo !== i ? "opacity-70" : ""}`}
-                  style={{ height: `${alturas[i]}%` }}
+                  style={{ height: `${alturas[i]}%`, "--i": i } as React.CSSProperties}
+                  className={`fx-barra block w-full max-w-6 rounded-t-[4px] transition-colors ${activo === i ? "bg-[#d08a4b]" : "bg-miel"} ${activo !== null && activo !== i ? "opacity-70" : ""}`}
                 />
               </button>
             ))}

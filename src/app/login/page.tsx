@@ -1,6 +1,7 @@
 import { cookies } from "next/headers";
 import Image from "next/image";
 import { Suspense } from "react";
+import { BotonTema } from "@/components/boton-tema";
 import { COOKIE_ULTIMO_EMAIL } from "./cookies";
 import { FormularioLogin } from "./formulario-login";
 
@@ -12,8 +13,10 @@ export default function PaginaLogin() {
       {/* Resplandor cálido de madera detrás del logo: da profundidad sin recargar la pantalla. */}
       <div
         aria-hidden
-        className="pointer-events-none absolute inset-0 -z-10 bg-[radial-gradient(55%_45%_at_50%_28%,rgba(107,66,38,0.38),transparent_72%)]"
+        className="fx-respirar pointer-events-none absolute inset-0 -z-10 bg-[radial-gradient(55%_45%_at_50%_28%,rgba(107,66,38,0.38),transparent_72%)]"
       />
+
+      <BotonTema className="absolute right-4 top-4 grid h-9 w-9 place-items-center rounded-lg border border-crema/20 text-crema/80 transition hover:bg-white/5" />
 
       <div className="flex w-full max-w-sm flex-col items-center text-center">
         <Image

@@ -3,6 +3,7 @@
 import Image from "next/image";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
+import { BotonTema } from "@/components/boton-tema";
 import { Icono, type NombreIcono } from "@/components/icono";
 import { iniciales } from "@/lib/panel";
 import { BotonCerrarSesion } from "./boton-cerrar-sesion";
@@ -86,7 +87,8 @@ export function NavegacionCliente({ nombre, rol }: { nombre: string; rol: Rol })
               <p className="text-xs text-crema/55">{etiquetaRol}</p>
             </div>
           </div>
-          <BotonCerrarSesion className="mt-3 flex w-full items-center justify-center gap-2 rounded-lg border border-crema/20 px-3 py-2 text-sm text-crema/80 transition hover:bg-white/5 hover:text-crema" />
+          <BotonTema conTexto className="mt-3 flex w-full items-center justify-center gap-2 rounded-lg border border-crema/20 px-3 py-2 text-sm text-crema/80 transition hover:bg-white/5 hover:text-crema" />
+          <BotonCerrarSesion className="mt-2 flex w-full items-center justify-center gap-2 rounded-lg border border-crema/20 px-3 py-2 text-sm text-crema/80 transition hover:bg-white/5 hover:text-crema" />
         </div>
       </aside>
 
@@ -99,6 +101,7 @@ export function NavegacionCliente({ nombre, rol }: { nombre: string; rol: Rol })
           </Link>
           <span className="flex shrink-0 items-center gap-2">
             <span aria-hidden className="grid h-8 w-8 place-items-center rounded-full bg-madera text-xs font-semibold text-crema">{iniciales(nombre)}</span>
+            <BotonTema className="grid h-8 w-8 place-items-center rounded-lg border border-crema/20 text-crema/80" />
             <BotonCerrarSesion className="rounded-lg border border-crema/20 px-2.5 py-1.5 text-xs text-crema/80" etiquetaCorta />
           </span>
         </div>

@@ -31,9 +31,9 @@ import { TarjetaIndicador } from "./tarjeta-indicador";
 const mayuscula = (s: string) => s.charAt(0).toUpperCase() + s.slice(1);
 const plural = (n: number, uno: string, varios: string) => `${n} ${n === 1 ? uno : varios}`;
 
-export function Seccion({ titulo, subtitulo, children, className = "" }: { titulo: string; subtitulo?: string; children: ReactNode; className?: string }) {
+export function Seccion({ titulo, subtitulo, children, className = "", indice = 2 }: { titulo: string; subtitulo?: string; children: ReactNode; className?: string; indice?: number }) {
   return (
-    <section className={`rounded-2xl border border-crema/10 bg-white/[0.04] p-5 ${className}`}>
+    <section style={{ "--i": indice } as React.CSSProperties} className={`fx-entra rounded-2xl border border-crema/10 bg-white/[0.04] p-5 ${className}`}>
       <h2 className="text-lg font-medium">{titulo}</h2>
       {subtitulo ? <p className="mb-4 text-sm text-crema/55">{subtitulo}</p> : <div className="mb-4" />}
       {children}
@@ -110,6 +110,7 @@ export function VistaPanelDueno(d: DatosPanelDueno) {
         <TarjetaIndicador
           grande
           icono="tendencia"
+          indice={0}
           etiqueta="Ventas de hoy"
           valor={formatearPesos(delDia.total)}
           detalle={plural(delDia.cantidad, "venta", "ventas")}
@@ -118,6 +119,7 @@ export function VistaPanelDueno(d: DatosPanelDueno) {
         />
         <TarjetaIndicador
           icono="ticket"
+          indice={1}
           etiqueta="Ticket promedio"
           valor={formatearPesos(ticketHoy)}
           detalle="por venta, hoy"
@@ -125,12 +127,14 @@ export function VistaPanelDueno(d: DatosPanelDueno) {
         />
         <TarjetaIndicador
           icono="caja"
+          indice={2}
           etiqueta="Efectivo en caja"
           valor={d.efectivoEnCaja !== null ? formatearPesos(d.efectivoEnCaja) : "Cerrada"}
           detalle={d.cajaAbiertaDesde && d.efectivoEnCaja !== null ? `abierta desde las ${formatearHora(d.cajaAbiertaDesde)}` : "abrila para empezar a vender"}
         />
         <TarjetaIndicador
           icono="alerta"
+          indice={3}
           etiqueta="Para reponer"
           valor={String(d.paraReponer.length)}
           detalle={d.paraReponer.length === 0 ? "todo en orden" : sinStock > 0 ? `${sinStock} sin stock` : "con stock bajo"}

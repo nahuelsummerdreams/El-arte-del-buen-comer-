@@ -1,12 +1,18 @@
 import { redirect } from "next/navigation";
 import { obtenerSesion } from "@/lib/sesion";
+import { Asistente } from "./_asistente/asistente";
 import { NavegacionCliente } from "./navegacion-cliente";
 
 /** Lee quién está usando el sistema (nombre y rol) para armar el menú. */
 export async function Navegacion() {
   const sesion = await obtenerSesion();
   if (!sesion) redirect("/login");
-  return <NavegacionCliente nombre={sesion.perfil.nombre} rol={sesion.perfil.rol} />;
+  return (
+    <>
+      <NavegacionCliente nombre={sesion.perfil.nombre} rol={sesion.perfil.rol} />
+      <Asistente rol={sesion.perfil.rol} nombre={sesion.perfil.nombre} />
+    </>
+  );
 }
 
 /** Mientras llega la sesión: un hueco del mismo tamaño para que la pantalla no "salte". */

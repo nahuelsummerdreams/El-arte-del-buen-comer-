@@ -50,6 +50,7 @@ export function TarjetaIndicador({
   comparar,
   serie,
   acento,
+  indice = 0,
 }: {
   etiqueta: string;
   valor: string;
@@ -61,10 +62,13 @@ export function TarjetaIndicador({
   serie?: number[];
   /** Resalta la tarjeta (por ejemplo, algo que requiere atención). */
   acento?: "atencion";
+  /** Orden de aparición (0, 1, 2…): las tarjetas entran una tras otra. */
+  indice?: number;
 }) {
   return (
     <div
-      className={`rounded-2xl border p-4 ${acento === "atencion" ? "border-amber-400/30 bg-amber-400/[0.06]" : "border-crema/10 bg-white/[0.04]"}`}
+      style={{ "--i": indice } as React.CSSProperties}
+      className={`fx-entra fx-tarjeta rounded-2xl border p-4 ${acento === "atencion" ? "border-amber-400/30 bg-amber-400/[0.06]" : "border-crema/10 bg-white/[0.04]"}`}
     >
       <div className="flex items-start justify-between gap-2">
         <span className="grid h-10 w-10 place-items-center rounded-full bg-crema/10 text-crema">

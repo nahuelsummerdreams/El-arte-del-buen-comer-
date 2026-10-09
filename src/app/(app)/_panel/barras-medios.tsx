@@ -20,7 +20,7 @@ export function BarrasMedios({ medios }: { medios: MedioVendido[] }) {
       <p data-total-medios className="text-3xl font-semibold tracking-tight tabular-nums">{formatearPesos(total)}</p>
       <p className="text-xs text-crema/55">cobrado en el período</p>
       <ul className="mt-5 space-y-4">
-        {filas.map((f) => (
+        {filas.map((f, i) => (
           <li key={f.valor} data-medio={f.valor}>
             <div className="mb-1.5 flex items-baseline justify-between gap-2 text-sm">
               <span className="text-crema/85">{f.etiqueta}</span>
@@ -29,7 +29,7 @@ export function BarrasMedios({ medios }: { medios: MedioVendido[] }) {
               </span>
             </div>
             <div className="h-2.5 overflow-hidden rounded-full bg-miel/20" role="presentation">
-              <div className="h-full rounded-full bg-miel" style={{ width: `${f.pct}%` }} />
+              <div className="fx-llenar h-full rounded-full bg-miel" style={{ width: `${f.pct}%`, "--i": i } as React.CSSProperties} />
             </div>
           </li>
         ))}

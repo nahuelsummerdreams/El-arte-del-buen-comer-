@@ -25,7 +25,7 @@ export function ProgresoMeta({ p }: { p: Proyeccion }) {
         <p className="text-sm text-crema/60">de {formatearPesos(p.meta)}</p>
       </div>
       <div role="progressbar" aria-valuemin={0} aria-valuemax={100} aria-valuenow={avance} aria-label="Avance hacia la meta del mes" className="mt-3 h-2.5 overflow-hidden rounded-full bg-white/10">
-        <div className="h-full rounded-full bg-miel" style={{ width: `${avance}%` }} />
+        <div className="fx-llenar h-full rounded-full bg-miel" style={{ width: `${avance}%` }} />
       </div>
       <p className="mt-1.5 text-xs text-crema/55">{avance} % de la meta · quedan {p.diasRestantes} {p.diasRestantes === 1 ? "día" : "días"} (hoy incluido)</p>
       <p className={`mt-3 flex items-start gap-2 text-sm ${m.clase}`}>

@@ -18,3 +18,96 @@ body {
   background: var(--color-tinta);
   color: var(--color-crema);
 }
+
+/* ------------------------------------------------------------------------------------------------
+   MODO DÍA. Se activa con <html data-tema="claro"> (ver el botón de tema y el script del <head>).
+   Truco: toda la app pinta con `crema` (texto) y `tinta` (fondo), así que alcanza con INTERCAMBIARLOS
+   acá para que todo se invierta de una sola vez, incluidas las transparencias (text-crema/60, etc.).
+   Después se ajustan a mano las pocas cosas que no salen de la paleta: las capas translúcidas
+   blancas y los colores de estado (rojo, verde, ámbar), que sobre fondo claro pasan a tonos más
+   oscuros para mantener el contraste.
+   ------------------------------------------------------------------------------------------------ */
+html[data-tema="claro"] {
+  color-scheme: light;
+  --color-tinta: #f6f1e6; /* fondo: crema muy clara */
+  --color-crema: #26211c; /* texto: tinta cálida */
+  --color-miel: #a8651f; /* acentos y barras: contraste 4,3:1 sobre el fondo claro */
+}
+html[data-tema="oscuro"] {
+  color-scheme: dark;
+}
+
+/* Capas translúcidas que en oscuro son "luz" (blanco) y en claro tienen que ser "sombra" (tinta). */
+html[data-tema="claro"] .bg-white\/5,
+html[data-tema="claro"] .hover\:bg-white\/5:hover,
+html[data-tema="claro"] .bg-white\/10 {
+  background-color: rgb(38 33 28 / 0.06);
+}
+html[data-tema="claro"] .bg-white\/\[0\.03\],
+html[data-tema="claro"] .bg-white\/\[0\.04\] {
+  background-color: rgb(255 255 255 / 0.72);
+  box-shadow: 0 1px 2px rgb(38 33 28 / 0.06);
+}
+html[data-tema="claro"] .bg-black\/20 {
+  background-color: rgb(255 255 255 / 0.55);
+}
+html[data-tema="claro"] .bg-madera.text-crema {
+  color: #f6f1e6; /* iniciales sobre el círculo de madera */
+}
+
+/* Colores de estado: del tono pastel (para fondo oscuro) al tono profundo (para fondo claro). */
+html[data-tema="claro"] .text-red-200,
+html[data-tema="claro"] .text-red-300 {
+  color: #b42318;
+}
+html[data-tema="claro"] .text-emerald-100,
+html[data-tema="claro"] .text-emerald-200,
+html[data-tema="claro"] .text-emerald-300,
+html[data-tema="claro"] .text-emerald-100\/80 {
+  color: #0b6b3e;
+}
+html[data-tema="claro"] .text-amber-100,
+html[data-tema="claro"] .text-amber-300 {
+  color: #8a5000;
+}
+
+/* ------------------------------------------------------------------------------------------------
+   EFECTOS DE MOVIMIENTO. Sutiles a propósito: dan vida y jerarquía (lo importante aparece primero)
+   sin distraer a quien está cobrando. Quien tiene activada la opción "reducir movimiento" en su
+   dispositivo no ve ninguno (bloque al final).
+   ------------------------------------------------------------------------------------------------ */
+@keyframes fx-subir { from { opacity: 0; transform: translateY(12px); } to { opacity: 1; transform: none; } }
+@keyframes fx-crecer { from { transform: scaleY(0); } to { transform: scaleY(1); } }
+@keyframes fx-llenar { from { transform: scaleX(0); } to { transform: scaleX(1); } }
+@keyframes fx-abrir { from { opacity: 0; transform: translateY(14px) scale(0.94); } to { opacity: 1; transform: none; } }
+@keyframes fx-rebote { 0%, 80%, 100% { transform: translateY(0); opacity: 0.5; } 40% { transform: translateY(-5px); opacity: 1; } }
+@keyframes fx-pulso { 0% { box-shadow: 0 0 0 0 rgb(184 117 58 / 0.5); } 70% { box-shadow: 0 0 0 16px rgb(184 117 58 / 0); } 100% { box-shadow: 0 0 0 0 rgb(184 117 58 / 0); } }
+@keyframes fx-respirar { 0%, 100% { opacity: 0.8; transform: scale(1); } 50% { opacity: 1; transform: scale(1.06); } }
+@keyframes fx-girar { from { opacity: 0; transform: rotate(-90deg) scale(0.6); } to { opacity: 1; transform: none; } }
+@keyframes fx-reflejo { 0% { background-position: -150% 0; } 100% { background-position: 250% 0; } }
+
+/* Entrada escalonada: cada elemento con --i tarda un poquito más que el anterior. */
+.fx-entra { animation: fx-subir 0.6s cubic-bezier(0.2, 0.7, 0.2, 1) both; animation-delay: calc(var(--i, 0) * 70ms); }
+.fx-pagina { animation: fx-subir 0.4s cubic-bezier(0.2, 0.7, 0.2, 1) both; }
+.fx-mensaje { animation: fx-subir 0.35s cubic-bezier(0.2, 0.7, 0.2, 1) both; }
+.fx-panel-asistente { animation: fx-abrir 0.28s cubic-bezier(0.2, 0.8, 0.2, 1) both; transform-origin: bottom right; }
+.fx-giro { animation: fx-girar 0.3s ease both; }
+.fx-punto { animation: fx-rebote 1.1s ease-in-out infinite; }
+.fx-asistente-boton { animation: fx-pulso 2.8s ease-out 1.2s infinite; background-image: linear-gradient(135deg, #c98a4b, #a8651f); }
+.fx-brillo { background-image: linear-gradient(110deg, transparent 30%, rgb(255 255 255 / 0.45) 50%, transparent 70%), linear-gradient(135deg, #c98a4b, #a8651f); background-size: 250% 100%, 100% 100%; background-repeat: no-repeat; animation: fx-reflejo 3.2s ease-in-out infinite; }
+.fx-respirar { animation: fx-respirar 7s ease-in-out infinite; }
+
+/* Las barras del gráfico crecen desde el piso; las de progreso, desde la izquierda. */
+.fx-barra { transform-origin: bottom; animation: fx-crecer 0.8s cubic-bezier(0.2, 0.8, 0.2, 1) both; animation-delay: calc(var(--i, 0) * 18ms + 250ms); }
+.fx-llenar { transform-origin: left; animation: fx-llenar 1s cubic-bezier(0.2, 0.8, 0.2, 1) both; animation-delay: calc(var(--i, 0) * 90ms + 300ms); }
+
+/* Las tarjetas se elevan un poquito al pasar el mouse. */
+.fx-tarjeta { transition: transform 0.25s ease, box-shadow 0.25s ease, border-color 0.25s ease; }
+.fx-tarjeta:hover { transform: translateY(-3px); box-shadow: 0 14px 30px -14px rgb(0 0 0 / 0.45); border-color: color-mix(in oklab, var(--color-miel) 45%, transparent); }
+html[data-tema="claro"] .fx-tarjeta:hover { box-shadow: 0 14px 30px -16px rgb(38 33 28 / 0.35); }
+
+@media (prefers-reduced-motion: reduce) {
+  .fx-entra, .fx-pagina, .fx-mensaje, .fx-panel-asistente, .fx-giro, .fx-punto, .fx-asistente-boton,
+  .fx-brillo, .fx-respirar, .fx-barra, .fx-llenar { animation: none !important; }
+  .fx-tarjeta, .fx-tarjeta:hover { transition: none !important; transform: none !important; }
+}

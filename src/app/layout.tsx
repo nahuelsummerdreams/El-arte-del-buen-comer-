@@ -23,12 +23,20 @@ export const metadata: Metadata = {
   description: "Sistema de gestión: productos, ventas, inventario y caja.",
 };
 
+// Se ejecuta ANTES de dibujar la página: lee la elección guardada y la aplica al <html>. Sin esto,
+// quien eligió el modo día vería un destello oscuro en cada carga. Por defecto: oscuro (la marca).
+const SCRIPT_TEMA = `try{var t=localStorage.getItem("tema");document.documentElement.dataset.tema=t==="claro"?"claro":"oscuro"}catch(e){document.documentElement.dataset.tema="oscuro"}`;
+
 export default function RootLayout({ children }: LayoutProps<"/">) {
   return (
     <html
       lang="es"
+      suppressHydrationWarning
       className={`${geistSans.variable} ${geistMono.variable} ${playfair.variable} h-full antialiased`}
     >
+      <head>
+        <script dangerouslySetInnerHTML={{ __html: SCRIPT_TEMA }} />
+      </head>
       <body className="min-h-full flex flex-col">{children}</body>
     </html>
   );
