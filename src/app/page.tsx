@@ -2,7 +2,7 @@ import Image from "next/image";
 import Link from "next/link";
 import { redirect } from "next/navigation";
 import { Suspense } from "react";
-import { cerrarSesion } from "./login/actions";
+import { BotonCerrarSesion } from "./boton-cerrar-sesion";
 import { obtenerSesion } from "@/lib/sesion";
 
 // Con Cache Components, la página es una "carcasa" estática que carga al instante
@@ -29,14 +29,7 @@ export default function Panel() {
           Productos
         </Link>
       </nav>
-      <form action={cerrarSesion}>
-        <button
-          type="submit"
-          className="rounded-lg border border-crema/30 px-4 py-2 text-sm transition hover:bg-white/5"
-        >
-          Cerrar sesión
-        </button>
-      </form>
+      <BotonCerrarSesion />
     </main>
   );
 }
