@@ -508,6 +508,32 @@ export type Database = {
           dias_restantes: number;
         }[];
       };
+      registrar_ajuste: {
+        Args: { p_producto_id: number; p_stock_contado: number; p_motivo: string; p_clave: string };
+        Returns: number;
+      };
+      actualizar_producto: {
+        Args: { p_id: number; p_nombre: string; p_categoria_id: number; p_codigo: string | null; p_stock_minimo: number; p_precio_centavos: number };
+        Returns: undefined;
+      };
+      archivar_producto: { Args: { p_id: number; p_activo: boolean }; Returns: undefined };
+      valor_inventario: { Args: Record<string, never>; Returns: { valor_centavos: number; con_costo: number; sin_costo: number }[] };
+      historial_producto: {
+        Args: { p_producto_id: number; p_limite: number };
+        Returns: {
+          id: number;
+          tipo: Database["public"]["Enums"]["tipo_mov_stock"];
+          cantidad: number;
+          saldo: number;
+          motivo: string | null;
+          usuario: string;
+          creado_en: string;
+        }[];
+      };
+      ajustes_del_periodo: {
+        Args: { p_desde: string; p_hasta: string };
+        Returns: { faltante_centavos: number; sobrante_centavos: number; ajustes: number; sin_costo: number }[];
+      };
       ventas_por_dia: {
         Args: { p_dias: number };
         Returns: { dia: string; cantidad: number; total: number; descuentos: number }[];

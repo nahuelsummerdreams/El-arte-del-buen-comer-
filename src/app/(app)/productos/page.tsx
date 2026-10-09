@@ -71,6 +71,12 @@ async function Contenido({ searchParams }: { searchParams: PageProps<"/productos
               Ingresar mercadería
             </Link>
             <Link
+              href="/stock"
+              className="rounded-lg border border-crema/30 px-4 py-2 text-sm transition hover:bg-white/5"
+            >
+              Stock
+            </Link>
+            <Link
               href="/productos/nuevo"
               className="rounded-lg bg-crema px-4 py-2 text-sm font-medium text-tinta transition hover:bg-crema/90"
             >

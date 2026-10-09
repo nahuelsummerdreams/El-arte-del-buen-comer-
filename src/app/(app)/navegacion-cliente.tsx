@@ -18,6 +18,7 @@ const MENU: Item[] = [
 ];
 const CATALOGO: Item[] = [
   { href: "/productos", etiqueta: "Productos", icono: "productos" },
+  { href: "/stock", etiqueta: "Stock", icono: "ingreso" },
   { href: "/inventario/ingreso", etiqueta: "Ingresar mercadería", icono: "ingreso", soloDueno: true },
   { href: "/inventario/merma", etiqueta: "Registrar pérdida", icono: "papelera", soloDueno: true },
   { href: "/precios", etiqueta: "Actualizar precios", icono: "etiqueta", soloDueno: true },
