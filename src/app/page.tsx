@@ -21,12 +21,15 @@ export default function Panel() {
       <Suspense fallback={<SaludoCargando />}>
         <Saludo />
       </Suspense>
-      <nav aria-label="Secciones">
+      <nav aria-label="Secciones" className="flex flex-col items-center gap-4">
         <Link
           href="/productos"
           className="rounded-lg bg-crema px-5 py-2.5 text-sm font-medium text-tinta transition hover:bg-crema/90"
         >
           Productos
+        </Link>
+        <Link href="/cuenta/contrasena" className="text-sm text-crema/60 underline-offset-4 transition hover:text-crema hover:underline">
+          Cambiar contraseña
         </Link>
       </nav>
       <BotonCerrarSesion />
