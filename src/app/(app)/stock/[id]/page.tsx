@@ -120,7 +120,7 @@ async function Contenido({ params, searchParams }: { params: PageProps<"/stock/[
         )}
       </Seccion>
 
-      <Seccion titulo="Archivar producto" subtitulo="Para lo que ya no vendés. No se borra nada: deja de aparecer para vender y su historial se conserva." indice={5}>
+      <Seccion titulo="Archivar producto" subtitulo="Para lo que ya no vendés. No se borra nada: deja de aparecer para vender y su historial se conserva (su código, si tiene, queda reservado)." indice={5}>
         <details className="group">
           <summary className="inline-block cursor-pointer rounded-lg border border-red-400/40 px-4 py-2 text-sm text-red-300 transition hover:bg-red-400/10">Archivar este producto…</summary>
           <form action={archivarProductoAccion} className="mt-4 space-y-3">
