@@ -2,6 +2,7 @@
 
 import { redirect } from "next/navigation";
 import { crearClienteServidor } from "@/lib/supabase/server";
+import { mensajeDeErrorDeLogin } from "./mensajes";
 
 export type EstadoLogin = { error: string | null };
 
@@ -23,8 +24,8 @@ export async function iniciarSesion(
   });
 
   if (error || !data.user) {
-    // Mensaje genérico a propósito: no revelamos si el email existe o no.
-    return { error: "Email o contraseña incorrectos." };
+    // El texto depende del TIPO de error: así una caída de red no se confunde con una clave mala.
+    return { error: mensajeDeErrorDeLogin(error ?? {}) };
   }
 
   // Tener cuenta no alcanza: hace falta un perfil activo (es lo que habilitan las reglas RLS).
