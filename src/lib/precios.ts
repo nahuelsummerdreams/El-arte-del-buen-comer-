@@ -73,6 +73,67 @@ export function calcularTotal(lineas: readonly LineaVenta[]): number {
   return total;
 }
 
+/**
+ * El mayor importe en centavos que entra en una columna `integer` de PostgreSQL (32 bits):
+ * $21.474.836,47. Si lo superamos, la base devolvería un error en lugar de guardar el dato.
+ */
+export const MAX_CENTAVOS = 2_147_483_647;
+
+/**
+ * Convierte lo que escribe una persona ("20.000,50", "$ 350", "20000,5") en centavos enteros.
+ *
+ * Formato argentino: el PUNTO separa miles y la COMA separa decimales. Para el único caso
+ * ambiguo (un punto solo) se decide así:
+ *   "20.500" → $20.500   (punto + exactamente 3 dígitos = miles)
+ *   "20.5"   → $20,50    (punto + 1 o 2 dígitos = decimales)
+ * Todo lo demás que no sea claro se RECHAZA: es mejor pedir que lo corrijan que cobrar mal.
+ */
+export function pesosACentavos(texto: string): number {
+  const invalido = () => new RangeError(`Precio inválido: «${texto}»`);
+
+  // Sacamos espacios (incluidos los "no separables" de Intl) y un "$" inicial opcional.
+  const limpio = texto.replace(/[\s ]/g, "").replace(/^\$/, "");
+
+  let entero: string;
+  let decimales = "";
+
+  if (limpio.includes(",")) {
+    const partes = limpio.split(",");
+    if (partes.length !== 2) throw invalido();
+    [entero, decimales] = partes;
+    // Parte entera: solo dígitos, o dígitos con puntos de miles bien puestos (1.234.567).
+    if (!/^(\d+|\d{1,3}(\.\d{3})+)$/.test(entero)) throw invalido();
+    if (!/^\d{1,2}$/.test(decimales)) throw invalido();
+  } else if (/^\d{1,3}(\.\d{3})+$/.test(limpio)) {
+    entero = limpio; // miles con puntos, sin decimales
+  } else if (/^\d+\.\d{1,2}$/.test(limpio)) {
+    [entero, decimales] = limpio.split("."); // decimales estilo inglés
+  } else if (/^\d+$/.test(limpio)) {
+    entero = limpio;
+  } else {
+    throw invalido();
+  }
+
+  entero = entero.replace(/\./g, "");
+  // Evita convertir cifras tan largas que Number() las redondearía sin avisar.
+  if (entero.replace(/^0+/, "").length > 10) throw invalido();
+
+  const centavos = Number(entero) * 100 + Number(decimales.padEnd(2, "0"));
+  if (centavos > MAX_CENTAVOS) throw invalido();
+  return centavos;
+}
+
+/**
+ * 2000050 → "20000,50". Para precargar un campo de edición: sin separador de miles
+ * (así es más fácil retocarlo) y con coma decimal. Es la inversa de pesosACentavos.
+ */
+export function centavosATextoEditable(centavos: number): string {
+  exigirEnteroSeguro(centavos, "Los centavos", 0);
+  const pesos = Math.floor(centavos / 100);
+  const resto = centavos % 100;
+  return `${pesos},${String(resto).padStart(2, "0")}`;
+}
+
 // Se crean una sola vez (crear un Intl.NumberFormat es relativamente caro).
 const formatoPesos = new Intl.NumberFormat("es-AR", { style: "currency", currency: "ARS" });
 const formatoNumero = new Intl.NumberFormat("es-AR", { maximumFractionDigits: 3 });

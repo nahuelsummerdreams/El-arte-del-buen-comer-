@@ -2,8 +2,11 @@ import { describe, expect, test } from "vitest";
 import {
   calcularSubtotal,
   calcularTotal,
+  centavosATextoEditable,
   formatearCantidad,
   formatearPesos,
+  MAX_CENTAVOS,
+  pesosACentavos,
 } from "@/lib/precios";
 
 // Intl usa un espacio "no separable" (U+00A0) entre $ y el número.
@@ -156,5 +159,97 @@ describe("formatearCantidad", () => {
     [12, "unidad", "12 u."],
   ] as const)("%i (%s) se muestra como %s", (cantidad, tipoVenta, esperado) => {
     expect(formatearCantidad(cantidad, tipoVenta)).toBe(esperado);
+  });
+});
+
+describe("pesosACentavos · acepta el formato argentino", () => {
+  test.each([
+    ["20000", 2_000_000],
+    ["20000,5", 2_000_050],
+    ["20000,50", 2_000_050],
+    ["20.000,50", 2_000_050],
+    ["1.234.567,89", 123_456_789],
+    ["$ 20.000,50", 2_000_050],
+    ["$20.000", 2_000_000],
+    ["  350  ", 35_000],
+    ["0,05", 5],
+    ["0", 0],
+    ["007", 700],
+    [" $ 1.500,00 ", 150_000], // espacios "no separables", como los que genera Intl
+  ])("«%s» → %i centavos", (texto, esperado) => {
+    expect(pesosACentavos(texto)).toBe(esperado);
+  });
+});
+
+describe("pesosACentavos · el punto: miles o decimales", () => {
+  test.each([
+    ["20.500", 2_050_000], //  grupos de exactamente 3 dígitos = miles
+    ["1.500", 150_000],
+    ["12.345.678", 1_234_567_800],
+    ["20.5", 2050], //         1 o 2 dígitos tras el punto = decimales (estilo inglés)
+    ["20.50", 2050],
+    ["1.23", 123], //         dos dígitos tras el punto: decimales, no miles mal puestos
+  ])("«%s» → %i centavos", (texto, esperado) => {
+    expect(pesosACentavos(texto)).toBe(esperado);
+  });
+});
+
+describe("pesosACentavos · rechaza lo ambiguo o inválido", () => {
+  test.each([
+    ["vacío", ""],
+    ["solo espacios", "   "],
+    ["solo el signo", "$"],
+    ["negativo", "-5"],
+    ["letras", "abc"],
+    ["letras mezcladas", "20x00"],
+    ["tres decimales con coma", "10,999"],
+    ["cuatro dígitos tras el punto (ni miles ni decimales)", "10.9999"],
+    ["formato inglés con coma de miles", "1,000.50"],
+    ["dos comas", "1,5,5"],
+    ["coma sin decimales", "20,"],
+    ["coma sin parte entera", ",50"],
+    ["puntos mal agrupados", "1.23.456"],
+    ["varios puntos decimales", "1.2.3"],
+    ["símbolo en el medio", "20$00"],
+    ["notación científica", "1e5"],
+    ["fracción", "1/2"],
+  ])("%s: «%s»", (_nombre, texto) => {
+    expect(() => pesosACentavos(texto)).toThrow();
+  });
+
+  test("rechaza un precio mayor a lo que entra en la base de datos (entero de 32 bits)", () => {
+    expect(pesosACentavos("21.474.836,47")).toBe(MAX_CENTAVOS); // el máximo exacto sí entra
+    expect(() => pesosACentavos("21.474.836,48")).toThrow(); //     un centavo más, no
+    expect(() => pesosACentavos("99999999999999999999")).toThrow(); // cifras absurdas
+  });
+
+  test("MAX_CENTAVOS es el máximo de un integer de PostgreSQL", () => {
+    expect(MAX_CENTAVOS).toBe(2_147_483_647);
+  });
+});
+
+describe("centavosATextoEditable · para precargar un campo al editar", () => {
+  test.each([
+    [2_000_050, "20000,50"],
+    [500_000, "5000,00"],
+    [0, "0,00"],
+    [5, "0,05"],
+    [150_000, "1500,00"],
+  ])("%i → «%s»", (centavos, esperado) => {
+    expect(centavosATextoEditable(centavos)).toBe(esperado);
+  });
+
+  test("rechaza negativos y decimales", () => {
+    expect(() => centavosATextoEditable(-1)).toThrow();
+    expect(() => centavosATextoEditable(1.5)).toThrow();
+  });
+
+  test("ida y vuelta: convertir a texto y volver da el mismo número (3.000 casos)", () => {
+    let semilla = 777;
+    for (let i = 0; i < 3000; i++) {
+      semilla = (semilla * 1103515245 + 12345) % 2147483648;
+      const centavos = semilla % (MAX_CENTAVOS + 1);
+      expect(pesosACentavos(centavosATextoEditable(centavos))).toBe(centavos);
+    }
   });
 });
