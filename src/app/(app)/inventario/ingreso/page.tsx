@@ -7,12 +7,12 @@ import { FormularioIngreso, type ProductoParaIngreso } from "./formulario-ingres
 
 export default function PaginaIngreso() {
   return (
-    <main className="mx-auto w-full max-w-xl px-6 py-10">
+    <main className="mx-auto w-full max-w-2xl px-6 py-10">
       <Link href="/productos" className="text-sm text-crema/60 hover:text-crema">
         ← Productos
       </Link>
       <h1 className="mb-2 mt-3 text-3xl font-semibold tracking-tight">Ingresar mercadería</h1>
-      <p className="mb-8 text-sm text-crema/60">Sumá al stock lo que acaba de llegar.</p>
+      <p className="mb-8 text-sm text-crema/60">Sumá al stock lo que acaba de llegar y anotá cuánto costó.</p>
       <Suspense fallback={<div className="h-80 animate-pulse rounded-lg bg-white/5" aria-busy="true" />}>
         <Contenido />
       </Suspense>
@@ -28,13 +28,14 @@ async function Contenido() {
   if (sesion.perfil.rol !== "dueno") redirect("/productos");
   const { supabase } = sesion;
 
-  const [productos, categorias, stocks] = await Promise.all([
+  const [productos, categorias, stocks, proveedores] = await Promise.all([
     supabase.from("productos_con_precio").select("id, nombre, tipo_venta, categoria_id").eq("activo", true),
     supabase.from("categorias").select("id, nombre").eq("activo", true).order("id"),
     supabase.from("stock_actual").select("producto_id, stock"),
+    supabase.from("proveedores").select("id, nombre").eq("activo", true).order("nombre"),
   ]);
 
-  if (productos.error || categorias.error || stocks.error) {
+  if (productos.error || categorias.error || stocks.error || proveedores.error) {
     return (
       <p role="alert" className="rounded-lg border border-red-400/40 bg-red-400/10 px-4 py-3 text-red-200">
         No pudimos cargar los productos. Intentá de nuevo en un momento.
@@ -75,5 +76,5 @@ async function Contenido() {
   // vean EL MISMO valor (generarlo en el navegador desajustaría la hidratación).
   const claveInicial = crypto.randomUUID();
 
-  return <FormularioIngreso productos={lista} categorias={categorias.data} claveInicial={claveInicial} />;
+  return <FormularioIngreso productos={lista} categorias={categorias.data} proveedores={proveedores.data} claveInicial={claveInicial} />;
 }

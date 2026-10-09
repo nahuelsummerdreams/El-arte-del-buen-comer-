@@ -1,7 +1,9 @@
 import { redirect } from "next/navigation";
 import { Suspense } from "react";
 import { leerResumenTurno } from "@/lib/caja";
+import { calcularGanancia, estadoDeuda, leerDeudas, leerResumenGanancia, leerVencimientos } from "@/lib/costos";
 import { diaArgentina, formatearHora } from "@/lib/fechas";
+import { diaDelMes, primerDiaDelMes, proyectarMes } from "@/lib/metas";
 import { leerMasVendidos, leerVentasPorDia, leerVentasPorMedio, productosParaReponer, restarDias } from "@/lib/panel";
 import { formatearPesos } from "@/lib/precios";
 import { obtenerSesion } from "@/lib/sesion";
@@ -54,13 +56,18 @@ async function PanelDueno({ supabase, nombre, periodo }: { supabase: Supabase; n
   const hoy = diaArgentina(new Date());
   const desde = restarDias(hoy, periodo - 1);
 
-  const [serieRes, mediosRes, masRes, productosRes, stocksRes, turnoRes] = await Promise.all([
-    supabase.rpc("ventas_por_dia", { p_dias: 30 }),
+  const [serieRes, mediosRes, masRes, productosRes, stocksRes, turnoRes, gananciaRes, vencRes, deudasRes, metaRes, proveedoresRes] = await Promise.all([
+    supabase.rpc("ventas_por_dia", { p_dias: 31 }), // 31 = el mes más largo: alcanza para el gráfico y para el avance del mes
     supabase.rpc("ventas_por_medio", { p_desde: desde, p_hasta: hoy }),
     supabase.rpc("productos_mas_vendidos", { p_desde: desde, p_hasta: hoy, p_limite: 8 }),
     supabase.from("productos_con_precio").select("id, nombre, tipo_venta, stock_minimo").eq("activo", true),
     supabase.from("stock_actual").select("producto_id, stock"),
     supabase.from("turnos_caja").select("id, abierto_en").is("cerrado_en", null).maybeSingle(),
+    supabase.rpc("resumen_ganancia", { p_desde: desde, p_hasta: hoy }),
+    supabase.rpc("vencimientos_proximos", { p_dias: 7 }),
+    supabase.from("lotes_stock").select("id, producto_id, proveedor_id, costo_total_centavos, pagar_hasta").eq("pagado", false).order("pagar_hasta", { ascending: true, nullsFirst: false }),
+    supabase.from("metas_mensuales").select("meta_centavos").eq("mes", primerDiaDelMes(hoy)).maybeSingle(),
+    supabase.from("proveedores").select("id, nombre"),
   ]);
 
   // Todo lo que viene de la base se verifica antes de mostrarse: si algo no cuadra, avisamos en vez de inventar cifras.
@@ -92,8 +99,35 @@ async function PanelDueno({ supabase, nombre, periodo }: { supabase: Supabase; n
     1000,
   );
 
+  // Los bloques nuevos (ganancia, meta, vencimientos, deudas) se degradan solos: si uno falla, el resto del panel sigue.
+  const filaGanancia = gananciaRes.error ? null : leerResumenGanancia(gananciaRes.data);
+  const vencimientos = vencRes.error ? null : leerVencimientos(vencRes.data);
+  const deudasLeidas = deudasRes.error ? null : leerDeudas(deudasRes.data);
+
+  const delMes = serie.slice(-diaDelMes(hoy)).map((d) => d.total);
+  const meta = metaRes.error || delMes.length !== diaDelMes(hoy) ? null : proyectarMes(hoy, delMes, metaRes.data?.meta_centavos ?? null);
+
+  const nombreProducto = new Map(productosRes.data.flatMap((p) => (p.id !== null && p.nombre !== null ? [[p.id, p.nombre] as const] : [])));
+  const nombreProveedor = new Map((proveedoresRes.data ?? []).map((p) => [p.id, p.nombre] as const));
+  const deudas = deudasLeidas
+    ? {
+        total: deudasLeidas.reduce((t, x) => t + x.costo_total_centavos, 0),
+        lista: deudasLeidas.map((x) => ({
+          id: x.id,
+          producto: nombreProducto.get(x.producto_id) ?? "Producto",
+          proveedor: x.proveedor_id !== null ? (nombreProveedor.get(x.proveedor_id) ?? null) : null,
+          monto: x.costo_total_centavos,
+          estado: estadoDeuda(x.pagar_hasta, hoy),
+        })),
+      }
+    : null;
+
   return (
     <VistaPanelDueno
+      ganancia={filaGanancia ? calcularGanancia(filaGanancia) : null}
+      meta={meta}
+      vencimientos={vencimientos}
+      deudas={deudas}
       nombre={nombre}
       hoy={hoy}
       periodo={periodo}

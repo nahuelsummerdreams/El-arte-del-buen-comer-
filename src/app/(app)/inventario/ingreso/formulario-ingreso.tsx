@@ -2,7 +2,10 @@
 
 import Link from "next/link";
 import { useActionState, useState } from "react";
-import type { TipoVenta } from "@/lib/precios";
+import { costoPorUnidadDeVenta } from "@/lib/costos";
+import { cantidadABase } from "@/lib/inventario";
+import { validarMonto } from "@/lib/metas";
+import { formatearPesos, type TipoVenta } from "@/lib/precios";
 import { registrarIngresoAccion, type EstadoIngreso } from "./actions";
 
 export type ProductoParaIngreso = {
@@ -14,6 +17,7 @@ export type ProductoParaIngreso = {
   stockTexto: string;
 };
 type Categoria = { id: number; nombre: string };
+export type ProveedorParaIngreso = { id: number; nombre: string };
 
 const campo =
   "w-full rounded-lg border bg-white/5 px-3 py-2.5 text-base outline-none focus:border-crema/60";
@@ -24,21 +28,41 @@ const borde = (hayError: boolean) => (hayError ? "border-red-400/70" : "border-c
 export function FormularioIngreso({
   productos,
   categorias,
+  proveedores,
   claveInicial,
 }: {
   productos: ProductoParaIngreso[];
   categorias: Categoria[];
+  proveedores: ProveedorParaIngreso[];
   claveInicial: string;
 }) {
   const [estado, accion, enviando] = useActionState<EstadoIngreso, FormData>(registrarIngresoAccion, {
     intento: 0,
     errores: {},
     mensaje: null,
-    valores: { productoId: "", cantidad: "", nota: "", clave: claveInicial },
+    valores: { productoId: "", cantidad: "", nota: "", clave: claveInicial, costoTotal: "", vence: "", proveedorId: "", pagado: "si", pagarHasta: "" },
   });
   const [elegido, setElegido] = useState(estado.valores.productoId);
+  const [cantidadTexto, setCantidadTexto] = useState(estado.valores.cantidad);
+  const [costoTexto, setCostoTexto] = useState(estado.valores.costoTotal);
+  const [aCuenta, setAcuenta] = useState(estado.valores.pagado === "no");
   const { errores, valores } = estado;
   const producto = productos.find((p) => String(p.id) === elegido);
+
+  // Ayuda en vivo: "equivale a $X el kilo". Es solo una guía; la cuenta que vale la hace la base.
+  let equivale: string | null = null;
+  if (producto && cantidadTexto.trim() !== "" && costoTexto.trim() !== "") {
+    const monto = validarMonto(costoTexto, { permitirCero: true });
+    try {
+      const base = cantidadABase(cantidadTexto, producto.tipoVenta);
+      if (monto.ok) {
+        const c = costoPorUnidadDeVenta(monto.centavos, base, producto.tipoVenta);
+        if (c !== null) equivale = `${formatearPesos(c)} ${producto.tipoVenta === "peso" ? "el kilo" : "cada unidad"}`;
+      }
+    } catch {
+      /* cantidad todavía incompleta o inválida: el error se muestra al enviar */
+    }
+  }
 
   return (
     <form action={accion} className="flex w-full flex-col gap-5" noValidate>
@@ -99,6 +123,7 @@ export function FormularioIngreso({
             id="cantidad"
             name="cantidad"
             defaultValue={valores.cantidad}
+            onChange={(e) => setCantidadTexto(e.target.value)}
             inputMode="decimal"
             autoComplete="off"
             placeholder={producto?.tipoVenta === "unidad" ? "Ej.: 12" : "Ej.: 2,5"}
@@ -108,9 +133,85 @@ export function FormularioIngreso({
           {errores.cantidad && <p data-error="cantidad" className="text-sm text-red-300">{errores.cantidad}</p>}
         </div>
 
+        <fieldset className="flex flex-col gap-5 rounded-xl border border-crema/10 bg-white/[0.03] p-4">
+          <legend className="px-2 text-sm text-crema/70">Costo y vencimiento <span className="text-crema/45">(recomendado)</span></legend>
+          <p className="-mt-2 text-sm text-crema/55">
+            Con el costo, el panel te muestra cuánto ganás de verdad. Con el vencimiento, te avisa antes de que se pierda mercadería.
+          </p>
+
+          <div className="flex flex-col gap-1.5">
+            <label htmlFor="costoTotal" className="text-sm">
+              Cuánto pagaste por todo este ingreso <span className="text-crema/50">($)</span>
+            </label>
+            <input
+              id="costoTotal"
+              name="costoTotal"
+              defaultValue={valores.costoTotal}
+              onChange={(e) => setCostoTexto(e.target.value)}
+              inputMode="decimal"
+              autoComplete="off"
+              placeholder="Ej.: 80.000"
+              aria-invalid={!!errores.costoTotal}
+              className={`${campo} ${borde(!!errores.costoTotal)}`}
+            />
+            {equivale && <p data-info="equivale" className="text-sm text-miel">Equivale a {equivale}.</p>}
+            {errores.costoTotal && <p data-error="costoTotal" className="text-sm text-red-300">{errores.costoTotal}</p>}
+          </div>
+
+          <div className="flex flex-col gap-1.5">
+            <label htmlFor="vence" className="text-sm">Vence el</label>
+            <input
+              id="vence"
+              name="vence"
+              type="date"
+              defaultValue={valores.vence}
+              aria-invalid={!!errores.vence}
+              className={`${campo} ${borde(!!errores.vence)}`}
+            />
+            {errores.vence && <p data-error="vence" className="text-sm text-red-300">{errores.vence}</p>}
+          </div>
+
+          {proveedores.length > 0 && (
+            <div className="flex flex-col gap-1.5">
+              <label htmlFor="proveedorId" className="text-sm">Proveedor</label>
+              <select id="proveedorId" name="proveedorId" defaultValue={valores.proveedorId} className={`${campo} ${borde(!!errores.proveedorId)}`}>
+                <option value="">Sin especificar</option>
+                {proveedores.map((p) => (
+                  <option key={p.id} value={p.id}>{p.nombre}</option>
+                ))}
+              </select>
+              {errores.proveedorId && <p data-error="proveedorId" className="text-sm text-red-300">{errores.proveedorId}</p>}
+            </div>
+          )}
+
+          <div className="flex flex-col gap-2">
+            <span className="text-sm">¿Ya lo pagaste?</span>
+            <div className="flex gap-2">
+              {[
+                { v: "si", t: "Sí, pagado" },
+                { v: "no", t: "No, a cuenta" },
+              ].map((o) => (
+                <label key={o.v} className={`flex cursor-pointer items-center gap-2 rounded-lg border px-3 py-2 text-sm ${(o.v === "no") === aCuenta ? "border-crema/60 bg-white/10" : "border-crema/20"}`}>
+                  <input type="radio" name="pagado" value={o.v} defaultChecked={(valores.pagado === "no") === (o.v === "no")} onChange={() => setAcuenta(o.v === "no")} />
+                  {o.t}
+                </label>
+              ))}
+            </div>
+            {errores.pagado && <p data-error="pagado" className="text-sm text-red-300">{errores.pagado}</p>}
+          </div>
+
+          {aCuenta && (
+            <div className="flex flex-col gap-1.5">
+              <label htmlFor="pagarHasta" className="text-sm">Hay que pagarlo antes del <span className="text-crema/50">(opcional)</span></label>
+              <input id="pagarHasta" name="pagarHasta" type="date" defaultValue={valores.pagarHasta} aria-invalid={!!errores.pagarHasta} className={`${campo} ${borde(!!errores.pagarHasta)}`} />
+              {errores.pagarHasta && <p data-error="pagarHasta" className="text-sm text-red-300">{errores.pagarHasta}</p>}
+            </div>
+          )}
+        </fieldset>
+
         <div className="flex flex-col gap-1.5">
           <label htmlFor="nota" className="text-sm">
-            Nota <span className="text-crema/50">(opcional: proveedor, número de remito…)</span>
+            Nota <span className="text-crema/50">(opcional: número de remito…)</span>
           </label>
           <input
             id="nota"

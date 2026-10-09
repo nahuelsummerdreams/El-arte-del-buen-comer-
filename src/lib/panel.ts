@@ -81,11 +81,11 @@ export type ProductoVendido = {
   ingresos: number;
 };
 
-const esNoNegativo = (v: unknown): v is number => typeof v === "number" && Number.isSafeInteger(v) && v >= 0;
-const esObjeto = (v: unknown): v is Record<string, unknown> => typeof v === "object" && v !== null && !Array.isArray(v);
+export const esNoNegativo = (v: unknown): v is number => typeof v === "number" && Number.isSafeInteger(v) && v >= 0;
+export const esObjeto = (v: unknown): v is Record<string, unknown> => typeof v === "object" && v !== null && !Array.isArray(v);
 
 /** Valida fila por fila; si UNA sola es inválida devuelve null (preferimos no mostrar cifras dudosas). */
-function leerFilas<T>(datos: unknown, validar: (f: Record<string, unknown>) => T | null): T[] | null {
+export function leerFilas<T>(datos: unknown, validar: (f: Record<string, unknown>) => T | null): T[] | null {
   if (!Array.isArray(datos)) return null;
   const filas: T[] = [];
   for (const f of datos) {

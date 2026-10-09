@@ -11,6 +11,11 @@ export type ValoresIngreso = {
   cantidad: string;
   nota: string;
   clave: string;
+  costoTotal: string;
+  vence: string;
+  proveedorId: string;
+  pagado: string;
+  pagarHasta: string;
 };
 
 export type EstadoIngreso = {
@@ -33,6 +38,11 @@ export async function registrarIngresoAccion(
     cantidad: texto(formData.get("cantidad")),
     nota: texto(formData.get("nota")),
     clave: texto(formData.get("clave")),
+    costoTotal: texto(formData.get("costoTotal")),
+    vence: texto(formData.get("vence")),
+    proveedorId: texto(formData.get("proveedorId")),
+    pagado: texto(formData.get("pagado")) || "si",
+    pagarHasta: texto(formData.get("pagarHasta")),
   };
 
   // 1) Identidad y permiso, DENTRO de la acción (una Server Action es una puerta pública).
@@ -60,25 +70,22 @@ export async function registrarIngresoAccion(
   if (!resultado.ok) return { intento, errores: resultado.errores, mensaje: null, valores };
   const v = resultado.valores;
 
-  // 4) Registro en el libro de stock. La clave única hace que un doble envío no sume dos veces.
-  const { error } = await sesion.supabase.from("movimientos_stock").insert({
-    producto_id: v.productoId,
-    tipo: "ingreso",
-    cantidad: v.cantidad,
-    motivo: v.nota,
-    usuario_id: sesion.user.id,
-    clave_idempotencia: v.clave,
+  // 4) Todo en UNA operación de la base: suma el stock, guarda el lote (costo, vencimiento, proveedor,
+  //    pago) y actualiza el costo del producto. La clave única hace que un doble envío no sume dos veces.
+  const { error } = await sesion.supabase.rpc("registrar_ingreso", {
+    p_producto_id: v.productoId,
+    p_cantidad: v.cantidad,
+    p_nota: v.nota,
+    p_clave: v.clave,
+    p_costo_total_centavos: v.costoTotalCentavos,
+    p_vence_el: v.venceEl,
+    p_proveedor_id: v.proveedorId,
+    p_pagado: v.pagado,
+    p_pagar_hasta: v.pagarHasta,
   });
-
-  if (error) {
-    // Si la clave ya existe, ESTE mismo ingreso ya se registró (reintento o doble clic):
-    // no es un error, seguimos como si recién se hubiera guardado.
-    const yaRegistrado = error.code === "23505" && error.message.includes("movimientos_stock_clave_unica");
-    if (!yaRegistrado) {
-      return { intento, errores: {}, mensaje: mensajeDeErrorAlRegistrarIngreso(error), valores };
-    }
-  }
+  if (error) return { intento, errores: {}, mensaje: mensajeDeErrorAlRegistrarIngreso(error), valores };
 
   revalidatePath("/productos");
+  revalidatePath("/");
   redirect("/productos?ingreso=1");
 }

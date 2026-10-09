@@ -50,6 +50,69 @@ export type Database = {
         };
         Relationships: [];
       };
+      gastos_fijos: {
+        Row: { activo: boolean; creado_en: string; id: number; monto_centavos: number; nombre: string };
+        Insert: { activo?: boolean; creado_en?: string; id?: never; monto_centavos: number; nombre: string };
+        Update: { activo?: boolean; creado_en?: string; id?: never; monto_centavos?: number; nombre?: string };
+        Relationships: [];
+      };
+      lotes_stock: {
+        Row: {
+          cantidad: number;
+          costo_total_centavos: number | null;
+          creado_en: string;
+          id: number;
+          movimiento_id: number;
+          pagado: boolean;
+          pagado_en: string | null;
+          pagar_hasta: string | null;
+          producto_id: number;
+          proveedor_id: number | null;
+          vence_el: string | null;
+        };
+        Insert: {
+          cantidad: number;
+          costo_total_centavos?: number | null;
+          creado_en?: string;
+          id?: never;
+          movimiento_id: number;
+          pagado?: boolean;
+          pagado_en?: string | null;
+          pagar_hasta?: string | null;
+          producto_id: number;
+          proveedor_id?: number | null;
+          vence_el?: string | null;
+        };
+        Update: {
+          cantidad?: number;
+          costo_total_centavos?: number | null;
+          creado_en?: string;
+          id?: never;
+          movimiento_id?: number;
+          pagado?: boolean;
+          pagado_en?: string | null;
+          pagar_hasta?: string | null;
+          producto_id?: number;
+          proveedor_id?: number | null;
+          vence_el?: string | null;
+        };
+        Relationships: [
+          { foreignKeyName: "lotes_stock_producto_id_fkey"; columns: ["producto_id"]; isOneToOne: false; referencedRelation: "productos"; referencedColumns: ["id"] },
+          { foreignKeyName: "lotes_stock_proveedor_id_fkey"; columns: ["proveedor_id"]; isOneToOne: false; referencedRelation: "proveedores"; referencedColumns: ["id"] },
+        ];
+      };
+      metas_mensuales: {
+        Row: { actualizado_en: string; mes: string; meta_centavos: number };
+        Insert: { actualizado_en?: string; mes: string; meta_centavos: number };
+        Update: { actualizado_en?: string; mes?: string; meta_centavos?: number };
+        Relationships: [];
+      };
+      proveedores: {
+        Row: { activo: boolean; creado_en: string; id: number; nombre: string; telefono: string | null };
+        Insert: { activo?: boolean; creado_en?: string; id?: never; nombre: string; telefono?: string | null };
+        Update: { activo?: boolean; creado_en?: string; id?: never; nombre?: string; telefono?: string | null };
+        Relationships: [];
+      };
       movimientos_caja: {
         Row: {
           creado_en: string;
@@ -385,6 +448,64 @@ export type Database = {
           tipo_venta: Database["public"]["Enums"]["tipo_venta"];
           cantidad: number;
           ingresos: number;
+        }[];
+      };
+      registrar_ingreso: {
+        Args: {
+          p_producto_id: number;
+          p_cantidad: number;
+          p_nota: string | null;
+          p_clave: string;
+          p_costo_total_centavos: number | null;
+          p_vence_el: string | null;
+          p_proveedor_id: number | null;
+          p_pagado: boolean;
+          p_pagar_hasta: string | null;
+        };
+        Returns: number;
+      };
+      registrar_merma: {
+        Args: { p_producto_id: number; p_cantidad: number; p_motivo: string; p_clave: string };
+        Returns: number;
+      };
+      cambiar_precios: { Args: { p_cambios: Json }; Returns: number };
+      resumen_ganancia: {
+        Args: { p_desde: string; p_hasta: string };
+        Returns: { ingresos_con_costo: number; costo_vendido: number; ingresos_sin_costo: number; descuentos: number }[];
+      };
+      margen_por_producto: {
+        Args: { p_desde: string; p_hasta: string; p_limite: number };
+        Returns: {
+          producto_id: number;
+          nombre: string;
+          tipo_venta: Database["public"]["Enums"]["tipo_venta"];
+          cantidad: number;
+          ingresos_con_costo: number;
+          costo_vendido: number;
+          ingresos_sin_costo: number;
+        }[];
+      };
+      mermas_del_periodo: {
+        Args: { p_desde: string; p_hasta: string };
+        Returns: {
+          producto_id: number;
+          nombre: string;
+          tipo_venta: Database["public"]["Enums"]["tipo_venta"];
+          cantidad: number;
+          costo_centavos: number;
+          sin_costo: number;
+        }[];
+      };
+      vencimientos_proximos: {
+        Args: { p_dias: number };
+        Returns: {
+          lote_id: number;
+          producto_id: number;
+          nombre: string;
+          tipo_venta: Database["public"]["Enums"]["tipo_venta"];
+          quedan: number;
+          vence_el: string;
+          dias_restantes: number;
         }[];
       };
       ventas_por_dia: {

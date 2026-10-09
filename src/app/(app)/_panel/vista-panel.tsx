@@ -1,6 +1,8 @@
 import Link from "next/link";
 import type { ReactNode } from "react";
+import type { FilaVencimiento, Ganancia } from "@/lib/costos";
 import { formatearHora } from "@/lib/fechas";
+import type { Proyeccion } from "@/lib/metas";
 import {
   etiquetaDiaLarga,
   ticketPromedio,
@@ -13,7 +15,10 @@ import { formatearPesos } from "@/lib/precios";
 import { BarrasMedios } from "./barras-medios";
 import { FiltroPeriodo, type Periodo } from "./filtro-periodo";
 import { GraficoVentas } from "./grafico-ventas";
+import { ListaDeudas, type DeudaVisible } from "./lista-deudas";
+import { EnlacePerdida, ListaVencimientos } from "./lista-vencimientos";
 import { ListaReponer } from "./lista-reponer";
+import { ProgresoMeta } from "./progreso-meta";
 import { TablaMasVendidos } from "./tabla-mas-vendidos";
 import { TarjetaIndicador } from "./tarjeta-indicador";
 
@@ -76,6 +81,14 @@ export type DatosPanelDueno = {
   /** Instante en que se abrió la caja, o null si está cerrada. */
   cajaAbiertaDesde: string | null;
   efectivoEnCaja: number | null;
+  /** Ganancia estimada del período elegido; null si no se pudo calcular. */
+  ganancia: Ganancia | null;
+  /** Meta y ritmo del mes en curso; null si no se pudo calcular. */
+  meta: Proyeccion | null;
+  /** Lo que vence en los próximos 7 días (o ya venció) y todavía hay para vender; null si falló. */
+  vencimientos: FilaVencimiento[] | null;
+  /** Compras a cuenta sin pagar; null si falló. */
+  deudas: { total: number; lista: DeudaVisible[] } | null;
 };
 
 export function VistaPanelDueno(d: DatosPanelDueno) {
@@ -125,6 +138,44 @@ export function VistaPanelDueno(d: DatosPanelDueno) {
         />
       </div>
 
+
+      <div className="grid gap-6 lg:grid-cols-2">
+        <Seccion titulo="Meta del mes" subtitulo="Cuánto llevás y cómo viene el ritmo">
+          {d.meta ? (
+            <>
+              <ProgresoMeta p={d.meta} />
+              <Link href="/negocio" className="mt-4 inline-block text-sm text-crema/80 underline underline-offset-4 hover:text-crema">
+                {d.meta.estado === "sin_meta" ? "Definir la meta" : "Metas y gastos"}
+              </Link>
+            </>
+          ) : (
+            <Fallo texto="No pudimos calcular la meta del mes." />
+          )}
+        </Seccion>
+        <Seccion titulo="Ganancia estimada" subtitulo={`Últimos ${d.periodo} días, según los costos que cargaste`}>
+          {d.ganancia === null ? (
+            <Fallo texto="No pudimos calcular la ganancia." />
+          ) : d.ganancia.coberturaPct === null ? (
+            <p data-ganancia="sin_ventas" className="text-sm text-crema/65">Todavía no hay ventas en este período.</p>
+          ) : d.ganancia.coberturaPct === 0 ? (
+            <p data-ganancia="sin_costos" className="text-sm text-crema/65">
+              Todavía no cargaste costos. Cuando ingreses mercadería con lo que pagaste, acá vas a ver cuánto ganás de verdad.{" "}
+              <Link href="/inventario/ingreso" className="underline underline-offset-4">Ingresar mercadería</Link>
+            </p>
+          ) : (
+            <div data-ganancia="ok">
+              <p className="text-3xl font-semibold tabular-nums">{formatearPesos(d.ganancia.ganancia)}</p>
+              <p className="mt-1 text-sm text-crema/65">
+                {d.ganancia.margenPct !== null ? `Un margen de ${d.ganancia.margenPct} % sobre lo vendido. ` : ""}
+                {d.ganancia.coberturaPct < 100
+                  ? `Cuenta solo el ${d.ganancia.coberturaPct} % de lo vendido, que es lo que tiene costo cargado (${formatearPesos(d.ganancia.ingresosSinCosto)} no tienen costo).`
+                  : "Todo lo vendido tiene costo cargado."}
+              </p>
+            </div>
+          )}
+        </Seccion>
+      </div>
+
       <div className="flex flex-wrap items-center justify-between gap-3">
         <p className="text-sm text-crema/60">Mostrando los últimos {d.periodo} días</p>
         <FiltroPeriodo actual={d.periodo} />
@@ -145,6 +196,19 @@ export function VistaPanelDueno(d: DatosPanelDueno) {
         </Seccion>
         <Seccion titulo="Para reponer" subtitulo="Sin stock o por debajo del mínimo">
           <ListaReponer productos={d.paraReponer.slice(0, 6)} />
+        </Seccion>
+      </div>
+      <div className="grid gap-6 lg:grid-cols-2">
+        <Seccion titulo="Vence pronto" subtitulo="Próximos 7 días, de lo que todavía hay para vender">
+          {d.vencimientos === null ? <Fallo texto="No pudimos cargar los vencimientos." /> : (
+            <>
+              <ListaVencimientos filas={d.vencimientos.slice(0, 6)} />
+              <EnlacePerdida />
+            </>
+          )}
+        </Seccion>
+        <Seccion titulo="Cuentas a pagar" subtitulo="Compras a cuenta que todavía no pagaste">
+          {d.deudas === null ? <Fallo texto="No pudimos cargar las cuentas a pagar." /> : <ListaDeudas total={d.deudas.total} deudas={d.deudas.lista} />}
         </Seccion>
       </div>
     </div>

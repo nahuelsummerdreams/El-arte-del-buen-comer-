@@ -18,6 +18,12 @@ const MENU: Item[] = [
 const CATALOGO: Item[] = [
   { href: "/productos", etiqueta: "Productos", icono: "productos" },
   { href: "/inventario/ingreso", etiqueta: "Ingresar mercadería", icono: "ingreso", soloDueno: true },
+  { href: "/inventario/merma", etiqueta: "Registrar pérdida", icono: "papelera", soloDueno: true },
+  { href: "/precios", etiqueta: "Actualizar precios", icono: "etiqueta", soloDueno: true },
+];
+const NEGOCIO: Item[] = [
+  { href: "/proveedores", etiqueta: "Proveedores", icono: "tienda", soloDueno: true },
+  { href: "/negocio", etiqueta: "Metas y gastos", icono: "meta", soloDueno: true },
 ];
 const CUENTA: Item[] = [{ href: "/cuenta/contrasena", etiqueta: "Cambiar contraseña", icono: "llave" }];
 
@@ -36,6 +42,7 @@ export function NavegacionCliente({ nombre, rol }: { nombre: string; rol: Rol })
       <Link
         key={i.href}
         href={i.href}
+        prefetch={false}
         aria-current={activo ? "page" : undefined}
         className={`flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm transition ${
           activo ? "bg-crema font-medium text-tinta shadow-md shadow-black/20" : "text-crema/75 hover:bg-white/5 hover:text-crema"
@@ -63,6 +70,8 @@ export function NavegacionCliente({ nombre, rol }: { nombre: string; rol: Rol })
           <div className="space-y-1">{visibles(MENU).map(enlace)}</div>
           {titulo("Catálogo")}
           <div className="space-y-1">{visibles(CATALOGO).map(enlace)}</div>
+          {visibles(NEGOCIO).length > 0 && titulo("Negocio")}
+          <div className="space-y-1">{visibles(NEGOCIO).map(enlace)}</div>
           {titulo("Cuenta")}
           <div className="space-y-1">{visibles(CUENTA).map(enlace)}</div>
         </nav>
@@ -94,12 +103,13 @@ export function NavegacionCliente({ nombre, rol }: { nombre: string; rol: Rol })
           </span>
         </div>
         <nav aria-label="Principal" className="flex gap-2 overflow-x-auto px-4 pb-2.5">
-          {[...visibles(MENU), ...visibles(CATALOGO), ...visibles(CUENTA)].map((i) => {
+          {[...visibles(MENU), ...visibles(CATALOGO), ...visibles(NEGOCIO), ...visibles(CUENTA)].map((i) => {
             const activo = estaActivo(pathname, i.href);
             return (
               <Link
                 key={i.href}
                 href={i.href}
+                prefetch={false}
                 aria-current={activo ? "page" : undefined}
                 className={`flex shrink-0 items-center gap-1.5 rounded-full border px-3.5 py-1.5 text-sm ${
                   activo ? "border-crema bg-crema font-medium text-tinta" : "border-crema/25 text-crema/80"
