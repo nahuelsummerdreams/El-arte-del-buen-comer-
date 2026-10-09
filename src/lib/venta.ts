@@ -1,4 +1,5 @@
 import type { MedioPago } from "@/lib/caja";
+import { cantidadABase, ErrorDeCantidad } from "@/lib/inventario";
 import { calcularSubtotal, pesosACentavos, type TipoVenta } from "@/lib/precios";
 
 /** Los topes son los MISMOS que valida la base de datos (registrar_venta). */
@@ -144,4 +145,75 @@ export function mensajeDeErrorDeVenta(error: { code?: string; message?: string }
     return "No pudimos conectar con el servidor. Revisá tu conexión e intentá de nuevo.";
   }
   return "No se pudo registrar la venta. Intentá de nuevo.";
+}
+
+const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+const MAX_INTEGER_BASE = 2_147_483_647;
+const MEDIOS: readonly MedioPago[] = ["efectivo", "tarjeta", "transferencia", "billetera"];
+
+export type EnvioVentaValidado = {
+  items: { producto_id: number; cantidad: number }[];
+  pagos: { medio: MedioPago; monto: number }[];
+  descuento: number;
+  clave: string;
+};
+export type ResultadoEnvioVenta = { ok: true; valores: EnvioVentaValidado } | { ok: false; mensaje: string };
+
+const INVALIDO = "Los datos de la venta no son válidos. Recargá la pantalla e intentá de nuevo.";
+const esEntero = (v: unknown): v is number => typeof v === "number" && Number.isSafeInteger(v);
+const textoEntero = (v: unknown): number | null =>
+  typeof v === "string" && /^\d{1,10}$/.test(v.trim()) ? Number(v.trim()) : null;
+
+/**
+ * Valida lo que el navegador manda al servidor al cobrar. NUNCA se confía en este envío:
+ *  - de cada renglón solo se conserva producto y cantidad (si trajera un precio, se descarta);
+ *  - el "total" que mandó el navegador sirve únicamente como CONFIRMACIÓN de precio: la base
+ *    calcula el total real y si no coincide, rechaza la venta.
+ */
+export function validarEnvioVenta(entrada: Record<string, unknown>): ResultadoEnvioVenta {
+  let crudo: unknown;
+  try {
+    crudo = typeof entrada.items === "string" ? JSON.parse(entrada.items) : null;
+  } catch {
+    return { ok: false, mensaje: INVALIDO };
+  }
+  if (!Array.isArray(crudo) || crudo.length < 1 || crudo.length > MAX_LINEAS) return { ok: false, mensaje: INVALIDO };
+
+  const items: EnvioVentaValidado["items"] = [];
+  for (const it of crudo) {
+    if (typeof it !== "object" || it === null || Array.isArray(it)) return { ok: false, mensaje: INVALIDO };
+    const { producto_id, cantidad } = it as Record<string, unknown>;
+    if (!esEntero(producto_id) || producto_id < 1 || !esEntero(cantidad) || cantidad < 1 || cantidad > MAX_CANTIDAD_PESO) {
+      return { ok: false, mensaje: INVALIDO };
+    }
+    items.push({ producto_id, cantidad }); // a propósito: se descarta cualquier otro campo
+  }
+
+  const medio = MEDIOS.find((m) => m === entrada.medio);
+  const total = textoEntero(entrada.total);
+  const descuento = entrada.descuento === "" ? 0 : textoEntero(entrada.descuento);
+  const clave = typeof entrada.clave === "string" ? entrada.clave.trim() : "";
+
+  if (!medio || total === null || total < 1 || total > MAX_INTEGER_BASE) return { ok: false, mensaje: INVALIDO };
+  if (descuento === null || descuento > MAX_INTEGER_BASE || !UUID.test(clave)) return { ok: false, mensaje: INVALIDO };
+
+  return { ok: true, valores: { items, pagos: [{ medio, monto: total }], descuento, clave: clave.toLowerCase() } };
+}
+
+export type ResultadoKilos = { ok: true; gramos: number } | { ok: false; error: string };
+
+/** Kilos escritos en el mostrador ("0,350") → gramos enteros. Misma regla que el ingreso de mercadería. */
+export function leerKilos(texto: string): ResultadoKilos {
+  if (texto.trim() === "") return { ok: false, error: "Escribí la cantidad en kilos. Ejemplo: 0,350" };
+  try {
+    return { ok: true, gramos: cantidadABase(texto, "peso") };
+  } catch (e) {
+    const motivo = e instanceof ErrorDeCantidad ? e.motivo : "invalida";
+    const error =
+      motivo === "punto" ? "Usá coma para los decimales. Ejemplo: 0,350"
+      : motivo === "cero" ? "La cantidad debe ser mayor a cero."
+      : motivo === "excede" ? "Máximo 1.000 kg por producto."
+      : "Cantidad inválida. Escribí los kilos con coma. Ejemplo: 0,350";
+    return { ok: false, error };
+  }
 }

@@ -23,8 +23,14 @@ export default function Panel() {
       </Suspense>
       <nav aria-label="Secciones" className="flex flex-col items-center gap-4">
         <Link
+          href="/venta"
+          className="rounded-lg bg-crema px-8 py-3 text-base font-semibold text-tinta shadow-lg shadow-black/30 transition hover:bg-crema/90"
+        >
+          Vender
+        </Link>
+        <Link
           href="/productos"
-          className="rounded-lg bg-crema px-5 py-2.5 text-sm font-medium text-tinta transition hover:bg-crema/90"
+          className="rounded-lg border border-crema/30 px-5 py-2.5 text-sm font-medium transition hover:bg-white/5"
         >
           Productos
         </Link>

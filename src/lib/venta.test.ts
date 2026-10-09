@@ -189,3 +189,104 @@ describe("mensajeDeErrorDeVenta", () => {
     expect(m).toMatch(/no se pudo registrar la venta/i);
   });
 });
+
+import { validarEnvioVenta } from "@/lib/venta";
+
+describe("validarEnvioVenta · lo que llega del navegador al cobrar", () => {
+  const CLAVE = "3f2b8c1e-5a7d-4e90-9c1b-0a1b2c3d4e5f";
+  const bueno = {
+    items: JSON.stringify([{ producto_id: 1, cantidad: 250 }, { producto_id: 2, cantidad: 3 }]),
+    medio: "efectivo",
+    total: "1550000",
+    descuento: "0",
+    clave: CLAVE,
+  };
+
+  test("arma los items, el pago por el total y el descuento", () => {
+    expect(validarEnvioVenta(bueno)).toEqual({
+      ok: true,
+      valores: {
+        items: [{ producto_id: 1, cantidad: 250 }, { producto_id: 2, cantidad: 3 }],
+        pagos: [{ medio: "efectivo", monto: 1_550_000 }],
+        descuento: 0,
+        clave: CLAVE,
+      },
+    });
+  });
+
+  test("ignora campos de más en los items (por ejemplo, un precio inventado)", () => {
+    const r = validarEnvioVenta({ ...bueno, items: JSON.stringify([{ producto_id: 1, cantidad: 5, precio: 1, subtotal: 1 }]) });
+    expect(r.ok && r.valores.items).toEqual([{ producto_id: 1, cantidad: 5 }]);
+    expect(JSON.stringify(r)).not.toMatch(/precio|subtotal/);
+  });
+
+  test("descuento y clave en mayúsculas se normalizan", () => {
+    const r = validarEnvioVenta({ ...bueno, descuento: "50000", clave: CLAVE.toUpperCase() });
+    expect(r.ok && r.valores.descuento).toBe(50_000);
+    expect(r.ok && r.valores.clave).toBe(CLAVE);
+  });
+
+  test.each([
+    ["items no es JSON", { items: "{{{" }],
+    ["items no es una lista", { items: '{"a":1}' }],
+    ["items vacío", { items: "[]" }],
+    ["más de 100 líneas", { items: JSON.stringify(Array.from({ length: 101 }, (_, i) => ({ producto_id: i + 1, cantidad: 1 }))) }],
+    ["producto_id decimal", { items: JSON.stringify([{ producto_id: 1.5, cantidad: 1 }]) }],
+    ["producto_id texto", { items: JSON.stringify([{ producto_id: "1", cantidad: 1 }]) }],
+    ["cantidad cero", { items: JSON.stringify([{ producto_id: 1, cantidad: 0 }]) }],
+    ["cantidad negativa", { items: JSON.stringify([{ producto_id: 1, cantidad: -2 }]) }],
+    ["cantidad decimal", { items: JSON.stringify([{ producto_id: 1, cantidad: 2.5 }]) }],
+    ["cantidad enorme", { items: JSON.stringify([{ producto_id: 1, cantidad: 1_000_001 }]) }],
+    ["un item nulo", { items: "[null]" }],
+    ["medio inventado", { medio: "cheque" }],
+    ["medio vacío", { medio: "" }],
+    ["total vacío", { total: "" }],
+    ["total cero", { total: "0" }],
+    ["total negativo", { total: "-5" }],
+    ["total decimal", { total: "10.5" }],
+    ["total más grande que un integer de la base", { total: "2147483648" }],
+    ["descuento negativo", { descuento: "-1" }],
+    ["descuento decimal", { descuento: "1.5" }],
+    ["clave inválida", { clave: "12345" }],
+    ["clave vacía", { clave: "" }],
+  ])("rechaza: %s", (_n, cambio) => {
+    expect(validarEnvioVenta({ ...bueno, ...cambio }).ok).toBe(false);
+  });
+
+  test("el descuento vacío cuenta como 0", () => {
+    const r = validarEnvioVenta({ ...bueno, descuento: "" });
+    expect(r.ok && r.valores.descuento).toBe(0);
+  });
+
+  test("no es texto → se rechaza", () => {
+    expect(validarEnvioVenta({ ...bueno, items: null }).ok).toBe(false);
+  });
+});
+
+import { leerKilos } from "@/lib/venta";
+
+describe("leerKilos · kilos escritos en el mostrador → gramos", () => {
+  test.each([["0,35", 350], ["0,350", 350], ["1", 1000], ["2,5", 2500], ["  0,1  ", 100], ["1000", 1_000_000]])(
+    "«%s» kg → %i g",
+    (texto, gramos) => expect(leerKilos(texto)).toEqual({ ok: true, gramos }),
+  );
+
+  test("vacío pide escribir la cantidad", () => {
+    const r = leerKilos("  ");
+    expect(!r.ok && r.error).toMatch(/escribí/i);
+  });
+
+  test("el punto se rechaza diciendo que use coma", () => {
+    const r = leerKilos("0.35");
+    expect(!r.ok && r.error).toMatch(/coma/i);
+  });
+
+  test.each([["cero", "0"], ["letras", "abc"], ["más de 1.000 kg", "1000,001"], ["negativo", "-1"]])("rechaza %s", (_n, t) => {
+    expect(leerKilos(t).ok).toBe(false);
+  });
+
+  test("el mensaje de cantidad cero es claro", () => {
+    const r = leerKilos("0");
+    expect(!r.ok && r.error).toMatch(/mayor a cero/i);
+  });
+});
