@@ -377,6 +377,24 @@ export type Database = {
         Returns: number;
       };
       resumen_turno: { Args: { p_turno_id: number }; Returns: Json };
+      productos_mas_vendidos: {
+        Args: { p_desde: string; p_hasta: string; p_limite: number };
+        Returns: {
+          producto_id: number;
+          nombre: string;
+          tipo_venta: Database["public"]["Enums"]["tipo_venta"];
+          cantidad: number;
+          ingresos: number;
+        }[];
+      };
+      ventas_por_dia: {
+        Args: { p_dias: number };
+        Returns: { dia: string; cantidad: number; total: number; descuentos: number }[];
+      };
+      ventas_por_medio: {
+        Args: { p_desde: string; p_hasta: string };
+        Returns: { medio: Database["public"]["Enums"]["medio_pago"]; cantidad: number; total: number }[];
+      };
     };
     Enums: {
       estado_venta: "completada" | "anulada";
