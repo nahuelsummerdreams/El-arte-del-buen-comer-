@@ -1,5 +1,6 @@
 import { createServerClient } from "@supabase/ssr";
 import { cookies } from "next/headers";
+import type { Database } from "./database.types";
 
 /**
  * Lee las variables de entorno y falla con un mensaje claro si faltan.
@@ -27,7 +28,8 @@ export async function crearClienteServidor() {
   const { url, key } = leerEntornoSupabase();
   const cookieStore = await cookies(); // en esta versión de Next, cookies() es async
 
-  return createServerClient(url, key, {
+  // <Database>: con esto TypeScript conoce tus tablas y columnas reales y marca los errores de tipeo.
+  return createServerClient<Database>(url, key, {
     cookies: {
       getAll() {
         return cookieStore.getAll();

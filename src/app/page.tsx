@@ -1,8 +1,9 @@
 import Image from "next/image";
+import Link from "next/link";
 import { redirect } from "next/navigation";
 import { Suspense } from "react";
 import { cerrarSesion } from "./login/actions";
-import { crearClienteServidor } from "@/lib/supabase/server";
+import { obtenerSesion } from "@/lib/sesion";
 
 // Con Cache Components, la página es una "carcasa" estática que carga al instante
 // (logo, botón). Lo que depende de la sesión se completa en cada pedido, dentro de <Suspense>.
@@ -20,6 +21,14 @@ export default function Panel() {
       <Suspense fallback={<SaludoCargando />}>
         <Saludo />
       </Suspense>
+      <nav aria-label="Secciones">
+        <Link
+          href="/productos"
+          className="rounded-lg bg-crema px-5 py-2.5 text-sm font-medium text-tinta transition hover:bg-crema/90"
+        >
+          Productos
+        </Link>
+      </nav>
       <form action={cerrarSesion}>
         <button
           type="submit"
@@ -43,20 +52,9 @@ function SaludoCargando() {
 }
 
 async function Saludo() {
-  const supabase = await crearClienteServidor();
-
-  // Verificamos la identidad acá también, no solo en el proxy (defensa en profundidad).
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
-  if (!user) redirect("/login");
-
-  const { data: perfil } = await supabase
-    .from("perfiles")
-    .select("nombre, rol")
-    .eq("id", user.id)
-    .maybeSingle();
-  if (!perfil) redirect("/login");
+  const sesion = await obtenerSesion();
+  if (!sesion) redirect("/login");
+  const { perfil } = sesion;
 
   return (
     <div className="space-y-2">

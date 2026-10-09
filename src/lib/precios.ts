@@ -151,3 +151,15 @@ export function formatearCantidad(cantidad: number, tipoVenta: TipoVenta): strin
   if (cantidad < GRAMOS_POR_KILO) return `${cantidad} g`;
   return `${formatoNumero.format(cantidad / GRAMOS_POR_KILO)} kg`;
 }
+
+/**
+ * Igual que formatearCantidad, pero acepta stock NEGATIVO y vacío (null).
+ * El stock puede quedar en negativo si se vende algo que el sistema creía agotado
+ * (por ejemplo, faltó cargar un ingreso de mercadería). Mostrar "-250 g" avisa del
+ * problema; lanzar un error rompería la pantalla entera por una sola fila.
+ */
+export function formatearStock(stock: number | null, tipoVenta: TipoVenta): string {
+  const valor = stock ?? 0;
+  exigirEnteroSeguro(valor, "El stock", Number.MIN_SAFE_INTEGER);
+  return valor < 0 ? `-${formatearCantidad(-valor, tipoVenta)}` : formatearCantidad(valor, tipoVenta);
+}

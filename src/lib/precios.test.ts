@@ -5,6 +5,7 @@ import {
   centavosATextoEditable,
   formatearCantidad,
   formatearPesos,
+  formatearStock,
   MAX_CENTAVOS,
   pesosACentavos,
 } from "@/lib/precios";
@@ -251,5 +252,28 @@ describe("centavosATextoEditable · para precargar un campo al editar", () => {
       const centavos = semilla % (MAX_CENTAVOS + 1);
       expect(pesosACentavos(centavosATextoEditable(centavos))).toBe(centavos);
     }
+  });
+});
+
+describe("formatearStock · el stock PUEDE ser negativo (se vendió algo que el sistema creía agotado)", () => {
+  test.each([
+    [0, "peso", "0 g"],
+    [4000, "peso", "4 kg"],
+    [250, "peso", "250 g"],
+    [-250, "peso", "-250 g"],
+    [-1500, "peso", "-1,5 kg"],
+    [12, "unidad", "12 u."],
+    [0, "unidad", "0 u."],
+    [-3, "unidad", "-3 u."],
+  ] as const)("%i (%s) → %s", (stock, tipo, esperado) => {
+    expect(formatearStock(stock, tipo)).toBe(esperado);
+  });
+
+  test("sin dato (null) se muestra como cero", () => {
+    expect(formatearStock(null, "peso")).toBe("0 g");
+  });
+
+  test("un stock con decimales sigue siendo un error (los datos tienen que ser enteros)", () => {
+    expect(() => formatearStock(1.5, "unidad")).toThrow();
   });
 });
