@@ -248,3 +248,37 @@ export function gramosPorMonto(texto: string, precioKiloCentavos: number): Resul
   if (g < 1) return { ok: false, error: "Con ese monto no alcanza ni para 1 gramo." };
   return { ok: true, gramos: g };
 }
+
+export const MOTIVOS_ANULACION = [
+  "Error de carga",
+  "El cliente se arrepintió",
+  "Producto en mal estado",
+  "Cobro duplicado",
+  "Otro motivo",
+] as const;
+
+export type ResultadoAnulacion = { ok: true; motivo: string } | { ok: false; error: string };
+
+/** Motivo de una anulación: uno de la lista; si es «Otro motivo» hay que contar qué pasó. */
+export function validarAnulacion(motivoElegido: string, detalle: string): ResultadoAnulacion {
+  if (!(MOTIVOS_ANULACION as readonly string[]).includes(motivoElegido)) return { ok: false, error: "Elegí el motivo de la anulación." };
+  const d = detalle.trim();
+  if (d.length > 120) return { ok: false, error: "El detalle admite hasta 120 caracteres." };
+  if (motivoElegido === "Otro motivo" && d === "") return { ok: false, error: "Contanos qué pasó." };
+  return { ok: true, motivo: d === "" ? motivoElegido : `${motivoElegido}: ${d}` };
+}
+
+export function mensajeDeErrorAlAnular(error: { code?: string; message?: string }): string {
+  const m = error.message ?? "";
+  if (error.code === "42501" || m === "solo_dueno") return "Solo el dueño puede anular ventas.";
+  if (m === "ya_anulada") return "Esa venta ya estaba anulada.";
+  if (m === "turno_cerrado") return "La caja de esa venta ya se cerró, así que no se puede anular. Corregilo con un ajuste de stock y un movimiento de caja.";
+  if (m === "venta_inexistente") return "La venta no existe.";
+  if (m === "motivo_obligatorio" || m === "motivo_largo") return "El motivo no es válido.";
+  return "No se pudo anular la venta. Intentá de nuevo.";
+}
+
+/** Cuánto se vendería de MÁS que el stock registrado (0 si alcanza). Solo avisa: no bloquea la venta. */
+export function faltanteDeStock(stock: number, cantidad: number): number {
+  return Math.max(0, cantidad - Math.max(0, stock));
+}

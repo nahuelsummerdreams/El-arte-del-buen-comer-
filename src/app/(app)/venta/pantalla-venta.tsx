@@ -9,6 +9,7 @@ import {
   armarVenta,
   calcularVuelto,
   cambiarCantidad,
+  faltanteDeStock,
   gramosPorMonto,
   leerGramos,
   leerKilos,
@@ -221,6 +222,14 @@ export function PantallaVenta({
                       )}
                       <span data-subtotal-linea className="tabular-nums">{formatearPesos(subtotalCarrito([l]))}</span>
                     </div>
+                    {(() => {
+                      const falta = faltanteDeStock((l.producto as ProductoParaVenta).stock, l.cantidad);
+                      return falta > 0 ? (
+                        <p data-aviso-stock className="mt-1.5 text-xs text-amber-300">
+                          ⚠ En el sistema hay {(l.producto as ProductoParaVenta).stockTexto}: se vende de más. Podés cobrar igual, pero después revisá el stock.
+                        </p>
+                      ) : null;
+                    })()}
                   </li>
                 ))}
               </ul>

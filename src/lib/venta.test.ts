@@ -5,8 +5,11 @@ import {
   armarVenta,
   calcularVuelto,
   cambiarCantidad,
+  faltanteDeStock,
   gramosPorMonto,
   leerGramos,
+  mensajeDeErrorAlAnular,
+  validarAnulacion,
   mensajeDeErrorDeVenta,
   quitarDelCarrito,
   subtotalCarrito,
@@ -320,4 +323,21 @@ describe("gramosPorMonto", () => {
     expect(gramosPorMonto("5", 0).ok).toBe(false);
     expect(gramosPorMonto("0,01", 2_000_000).ok).toBe(false); // 1 centavo no alcanza para 1 g
   });
+});
+
+describe("validarAnulacion", () => {
+  it("motivo de la lista", () => expect(validarAnulacion("Error de carga", "")).toEqual({ ok: true, motivo: "Error de carga" }));
+  it("con detalle", () => expect(validarAnulacion("Cobro duplicado", " dos veces ")).toEqual({ ok: true, motivo: "Cobro duplicado: dos veces" }));
+  it("«Otro motivo» exige detalle", () => expect(validarAnulacion("Otro motivo", "  ").ok).toBe(false));
+  it("motivo inventado o vacío", () => { expect(validarAnulacion("", "").ok).toBe(false); expect(validarAnulacion("lo que sea", "").ok).toBe(false); });
+  it("detalle demasiado largo", () => expect(validarAnulacion("Error de carga", "x".repeat(121)).ok).toBe(false));
+});
+
+describe("mensajeDeErrorAlAnular", () => {
+  it.each([["solo_dueno", "dueño"], ["ya_anulada", "ya estaba"], ["turno_cerrado", "ya se cerró"], ["raro", "No se pudo"]])("%s", (m, t) => expect(mensajeDeErrorAlAnular({ message: m })).toContain(t));
+  it("permiso por código", () => expect(mensajeDeErrorAlAnular({ code: "42501" })).toContain("dueño"));
+});
+
+describe("faltanteDeStock", () => {
+  it.each([[1000, 250, 0], [250, 250, 0], [200, 250, 50], [0, 3, 3], [-2, 3, 3]])("stock %i, vende %i → falta %i", (s, c, f) => expect(faltanteDeStock(s, c)).toBe(f));
 });

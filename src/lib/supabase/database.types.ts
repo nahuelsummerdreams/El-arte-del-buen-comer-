@@ -516,6 +516,7 @@ export type Database = {
         Args: { p_id: number; p_nombre: string; p_categoria_id: number; p_codigo: string | null; p_stock_minimo: number; p_precio_centavos: number };
         Returns: undefined;
       };
+      anular_venta: { Args: { p_venta_id: number; p_motivo: string }; Returns: number };
       archivar_producto: { Args: { p_id: number; p_activo: boolean }; Returns: undefined };
       valor_inventario: { Args: Record<string, never>; Returns: { valor_centavos: number; con_costo: number; sin_costo: number }[] };
       historial_producto: {
