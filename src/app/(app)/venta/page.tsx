@@ -144,7 +144,10 @@ async function Ticket({ ventaId }: { ventaId: number }) {
         </dl>
       </div>
 
-      <Link href="/venta" className="mt-5 block rounded-lg bg-crema px-5 py-3.5 text-center text-lg font-medium text-tinta shadow-lg shadow-black/30">
+      <Link href={`/ticket/${venta.id}`} data-ver-comprobante className="mt-5 block rounded-lg border border-crema/30 px-5 py-3 text-center font-medium transition hover:bg-white/5">
+        Comprobante: imprimir o mandar por WhatsApp
+      </Link>
+      <Link href="/venta" className="mt-3 block rounded-lg bg-crema px-5 py-3.5 text-center text-lg font-medium text-tinta shadow-lg shadow-black/30">
         Nueva venta
       </Link>
       <Link href="/" className="mt-3 block text-center text-sm text-crema/60 hover:text-crema">← Panel</Link>

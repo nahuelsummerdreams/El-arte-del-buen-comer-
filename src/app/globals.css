@@ -111,3 +111,16 @@ html[data-tema="claro"] .fx-tarjeta:hover { box-shadow: 0 14px 30px -16px rgb(38
   .fx-brillo, .fx-respirar, .fx-barra, .fx-llenar { animation: none !important; }
   .fx-tarjeta, .fx-tarjeta:hover { transition: none !important; transform: none !important; }
 }
+
+/* ------------------------------------------------------------------------------------------------
+   IMPRESIÓN (comprobantes). Lo que lleva la clase `no-imprimir` (menú, asistente, botones) no sale en
+   el papel, y el comprobante se imprime en blanco y negro con ancho de ticket (80 mm).
+   ------------------------------------------------------------------------------------------------ */
+@page { margin: 4mm; }
+@media print {
+  .no-imprimir { display: none !important; }
+  html, body { background: #fff !important; color: #000 !important; }
+  .fx-pagina, .fx-entra { animation: none !important; opacity: 1 !important; transform: none !important; }
+  .ticket-impreso { width: 80mm; max-width: 100%; margin: 0 auto !important; padding: 0 !important; border: 0 !important; background: #fff !important; box-shadow: none !important; }
+  .ticket-impreso, .ticket-impreso * { color: #000 !important; border-color: #000 !important; }
+}

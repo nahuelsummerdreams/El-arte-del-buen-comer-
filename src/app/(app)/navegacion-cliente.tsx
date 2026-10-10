@@ -25,6 +25,8 @@ const CATALOGO: Item[] = [
   { href: "/precios", etiqueta: "Actualizar precios", icono: "etiqueta", soloDueno: true },
 ];
 const NEGOCIO: Item[] = [
+  { href: "/ofertas", etiqueta: "Ofertas", icono: "etiqueta", soloDueno: true },
+  { href: "/pedidos", etiqueta: "Pedidos a proveedor", icono: "ingreso", soloDueno: true },
   { href: "/proveedores", etiqueta: "Proveedores", icono: "tienda", soloDueno: true },
   { href: "/negocio", etiqueta: "Metas y gastos", icono: "meta", soloDueno: true },
 ];
@@ -62,7 +64,7 @@ export function NavegacionCliente({ nombre, rol }: { nombre: string; rol: Rol })
   return (
     <>
       {/* ------------------------------------------------------- escritorio: barra lateral */}
-      <aside className="sticky top-0 hidden h-dvh w-64 shrink-0 flex-col border-r border-crema/10 bg-black/20 p-4 lg:flex">
+      <aside className="no-imprimir sticky top-0 hidden h-dvh w-64 shrink-0 flex-col border-r border-crema/10 bg-black/20 p-4 lg:flex">
         <Link href="/" className="flex items-center gap-3 px-2 py-1">
           <Image src="/logo.jpg" alt="" width={754} height={765} className="h-11 w-11 rounded-full object-cover ring-1 ring-crema/25" />
           <span className="font-display text-lg leading-tight">El Arte del Buen Comer</span>
@@ -95,7 +97,7 @@ export function NavegacionCliente({ nombre, rol }: { nombre: string; rol: Rol })
       </aside>
 
       {/* ------------------------------------------------------------- celular: barra superior */}
-      <header className="sticky top-0 z-30 border-b border-crema/10 bg-tinta/95 backdrop-blur lg:hidden">
+      <header className="no-imprimir sticky top-0 z-30 border-b border-crema/10 bg-tinta/95 backdrop-blur lg:hidden">
         <div className="flex items-center justify-between gap-3 px-4 py-2.5">
           <Link href="/" className="flex min-w-0 items-center gap-2.5">
             <Image src="/logo.jpg" alt="" width={754} height={765} className="h-9 w-9 rounded-full object-cover ring-1 ring-crema/25" />

@@ -4,8 +4,8 @@ import { Suspense } from "react";
 import { Icono } from "@/components/icono";
 import { cuadriculaDelMes, DIAS_SEMANA_CORTO, feriadoDe, leerDia, leerMes, mesAnterior, mesSiguiente, mesDe, nombreDeMes, rangoDelMes } from "@/lib/calendario";
 import { estadoDeuda, leerDeudas, leerVencimientos, textoVencimiento, type FilaDeuda, type FilaVencimiento } from "@/lib/costos";
-import { diaArgentina } from "@/lib/fechas";
-import { abreviarPesos, etiquetaDiaLarga, leerVentasPorDia, ticketPromedio, type DiaVenta } from "@/lib/panel";
+import { diaArgentina, formatearHora } from "@/lib/fechas";
+import { abreviarPesos, etiquetaDiaLarga, leerVentasPorDia, restarDias, ticketPromedio, type DiaVenta } from "@/lib/panel";
 import { formatearPesos, formatearStock } from "@/lib/precios";
 import { obtenerSesion } from "@/lib/sesion";
 import { Fallo, Seccion } from "../_panel/vista-panel";
@@ -58,6 +58,18 @@ async function Contenido({ searchParams }: { searchParams: PageProps<"/calendari
   for (const d of deudas ?? []) if (d.pagar_hasta) pagosEl.set(d.pagar_hasta, [...(pagosEl.get(d.pagar_hasta) ?? []), d]);
   const nombreProducto = new Map<number, string>((productosRes.data ?? []).map((p: { id: number; nombre: string }) => [p.id, p.nombre]));
   const nombreProveedor = new Map<number, string>((proveedoresRes.data ?? []).map((p: { id: number; nombre: string }) => [p.id, p.nombre]));
+
+  // Las ventas del día elegido, una por una, para abrir su comprobante. El día argentino va de las 00:00 a las 24:00 (UTC−3).
+  const ventasDelDia = elegido
+    ? await supabase
+        .from("ventas")
+        .select("id, total_centavos, creado_en")
+        .eq("estado", "completada")
+        .gte("creado_en", `${elegido}T00:00:00-03:00`)
+        .lt("creado_en", `${restarDias(elegido, -1)}T00:00:00-03:00`)
+        .order("creado_en", { ascending: false })
+        .limit(60)
+    : null;
 
   const semanas = cuadriculaDelMes(mes);
   const maximo = Math.max(0, ...semanas.flat().filter((c) => c.delMes).map((c) => ventaDe.get(c.dia)?.total ?? 0));
@@ -152,6 +164,22 @@ async function Contenido({ searchParams }: { searchParams: PageProps<"/calendari
                 <p className="text-crema/60">{elegido > hoy ? "Todavía no llegó este día." : ventas.some((x) => x.dia === elegido) ? "No hubo ventas." : "Sin datos de ventas para este día."}</p>
               )}
             </div>
+
+            {ventasDelDia && !ventasDelDia.error && ventasDelDia.data.length > 0 && (
+              <div>
+                <h3 className="mb-1 font-medium">Comprobantes</h3>
+                <ul className="divide-y divide-crema/10" data-ventas-del-dia>
+                  {ventasDelDia.data.map((v) => (
+                    <li key={v.id}>
+                      <Link href={`/ticket/${v.id}`} className="flex justify-between gap-3 py-2 transition hover:text-miel">
+                        <span>N.º {v.id} <span className="text-crema/55">· {formatearHora(v.creado_en)}</span></span>
+                        <span className="tabular-nums">{formatearPesos(v.total_centavos)}</span>
+                      </Link>
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            )}
 
             {esDueno && (
               <>

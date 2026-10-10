@@ -125,7 +125,7 @@ export function Asistente({ rol, nombre }: { rol: "dueno" | "cajero"; nombre: st
         aria-label={abierto ? "Cerrar el asistente" : "Abrir el asistente"}
         aria-expanded={abierto}
         data-asistente-boton
-        className="fx-asistente-boton fixed bottom-5 right-5 z-40 grid h-14 w-14 place-items-center overflow-hidden rounded-full bg-madera text-white shadow-xl shadow-black/30 ring-2 ring-miel transition hover:scale-105 active:scale-95 max-sm:bottom-4 max-sm:right-4"
+        className="no-imprimir fx-asistente-boton fixed bottom-5 right-5 z-40 grid h-14 w-14 place-items-center overflow-hidden rounded-full bg-madera text-white shadow-xl shadow-black/30 ring-2 ring-miel transition hover:scale-105 active:scale-95 max-sm:bottom-4 max-sm:right-4"
       >
         <span className="fx-giro grid place-items-center" key={abierto ? "x" : "a"}>
           {abierto ? <Icono nombre="cerrar" className="h-6 w-6" /> : <Image src="/logo.jpg" alt="" width={754} height={765} className="h-14 w-14 object-cover" />}
@@ -137,7 +137,7 @@ export function Asistente({ rol, nombre }: { rol: "dueno" | "cajero"; nombre: st
           role="dialog"
           aria-label="Asistente"
           data-asistente
-          className="fx-panel-asistente fixed bottom-24 right-5 z-40 flex h-[min(34rem,calc(100dvh-8rem))] w-[min(24rem,calc(100vw-2.5rem))] flex-col overflow-hidden rounded-2xl border border-crema/15 bg-tinta/95 shadow-2xl shadow-black/40 backdrop-blur-xl max-sm:bottom-20 max-sm:right-4 max-sm:w-[calc(100vw-2rem)]"
+          className="no-imprimir fx-panel-asistente fixed bottom-24 right-5 z-40 flex h-[min(34rem,calc(100dvh-8rem))] w-[min(24rem,calc(100vw-2.5rem))] flex-col overflow-hidden rounded-2xl border border-crema/15 bg-tinta/95 shadow-2xl shadow-black/40 backdrop-blur-xl max-sm:bottom-20 max-sm:right-4 max-sm:w-[calc(100vw-2rem)]"
         >
           <header className="flex items-center gap-3 border-b border-crema/10 px-4 py-3">
             <span className="fx-brillo relative grid h-10 w-10 shrink-0 place-items-center overflow-hidden rounded-full ring-2 ring-miel">
