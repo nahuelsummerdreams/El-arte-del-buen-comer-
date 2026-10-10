@@ -1,9 +1,12 @@
-import { describe, expect, test } from "vitest";
+import { describe, expect, it, test } from "vitest";
+import { calcularSubtotal, pesosACentavos } from "@/lib/precios";
 import {
   agregarAlCarrito,
   armarVenta,
   calcularVuelto,
   cambiarCantidad,
+  gramosPorMonto,
+  leerGramos,
   mensajeDeErrorDeVenta,
   quitarDelCarrito,
   subtotalCarrito,
@@ -288,5 +291,33 @@ describe("leerKilos · kilos escritos en el mostrador → gramos", () => {
   test("el mensaje de cantidad cero es claro", () => {
     const r = leerKilos("0");
     expect(!r.ok && r.error).toMatch(/mayor a cero/i);
+  });
+});
+
+describe("leerGramos", () => {
+  it.each([["350", 350], [" 1000 ", 1000], ["0250", 250]])("%s → %i g", (t, g) => expect(leerGramos(t)).toEqual({ ok: true, gramos: g }));
+  it.each(["", "0", "35,5", "1.000", "abc", "-5", "1000001"])("rechaza «%s»", (t) => expect(leerGramos(t).ok).toBe(false));
+  it("acepta el tope de 1.000 kg", () => expect(leerGramos("1000000")).toEqual({ ok: true, gramos: 1_000_000 }));
+});
+
+describe("gramosPorMonto", () => {
+  it("$5.000 de algo a $20.000/kg → 250 g (justo)", () => expect(gramosPorMonto("5000", 2_000_000)).toEqual({ ok: true, gramos: 250 }));
+  it("nunca cobra de más: el subtotal es ≤ monto", () => {
+    for (const [m, p] of [["1000", 1_234_500], ["3333", 2_199_900], ["500", 1_850_000], ["12.345,67", 999_999]] as const) {
+      const r = gramosPorMonto(m, p);
+      expect(r.ok).toBe(true);
+      if (r.ok) {
+        const sub = calcularSubtotal({ cantidad: r.gramos, precioCentavos: p, tipoVenta: "peso" });
+        expect(sub).toBeLessThanOrEqual(pesosACentavos(m));
+        expect(calcularSubtotal({ cantidad: r.gramos + 1, precioCentavos: p, tipoVenta: "peso" })).toBeGreaterThan(pesosACentavos(m));
+      }
+    }
+  });
+  it("errores", () => {
+    expect(gramosPorMonto("", 1000).ok).toBe(false);
+    expect(gramosPorMonto("abc", 1000).ok).toBe(false);
+    expect(gramosPorMonto("0", 1000).ok).toBe(false);
+    expect(gramosPorMonto("5", 0).ok).toBe(false);
+    expect(gramosPorMonto("0,01", 2_000_000).ok).toBe(false); // 1 centavo no alcanza para 1 g
   });
 });

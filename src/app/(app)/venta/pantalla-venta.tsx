@@ -3,12 +3,14 @@
 import Link from "next/link";
 import { useActionState, useState } from "react";
 import { MEDIOS_DE_PAGO, type MedioPago } from "@/lib/caja";
-import { formatearCantidad, formatearPesos, pesosACentavos } from "@/lib/precios";
+import { calcularSubtotal, formatearCantidad, formatearPesos, pesosACentavos } from "@/lib/precios";
 import {
   agregarAlCarrito,
   armarVenta,
   calcularVuelto,
   cambiarCantidad,
+  gramosPorMonto,
+  leerGramos,
   leerKilos,
   quitarDelCarrito,
   subtotalCarrito,
@@ -335,6 +337,17 @@ export function PantallaVenta({
   );
 }
 
+type ModoCantidad = "gramos" | "kilos" | "monto";
+const MODOS: { valor: ModoCantidad; etiqueta: string; pregunta: string; ejemplo: string }[] = [
+  { valor: "gramos", etiqueta: "Gramos", pregunta: "¿Cuántos gramos?", ejemplo: "Ej.: 350" },
+  { valor: "kilos", etiqueta: "Kilos", pregunta: "¿Cuántos kilos? (con coma)", ejemplo: "Ej.: 0,350" },
+  { valor: "monto", etiqueta: "Por monto $", pregunta: "¿Por cuántos pesos?", ejemplo: "Ej.: 5000" },
+];
+
+function leerSegunModo(modo: ModoCantidad, texto: string, precioKilo: number) {
+  return modo === "gramos" ? leerGramos(texto) : modo === "kilos" ? leerKilos(texto) : gramosPorMonto(texto, precioKilo);
+}
+
 function DialogoPeso({
   producto,
   reemplazar,
@@ -346,13 +359,17 @@ function DialogoPeso({
   onAceptar: (gramos: number) => void;
   onCerrar: () => void;
 }) {
+  const [modo, setModo] = useState<ModoCantidad>("gramos");
   const [texto, setTexto] = useState("");
   const [error, setError] = useState<string | null>(null);
 
+  const leido = leerSegunModo(modo, texto, producto.precioCentavos);
+  // Vista previa en vivo: lo que se va a llevar y lo que cuesta (mismo cálculo que el carrito).
+  const subtotal = leido.ok ? calcularSubtotal({ cantidad: leido.gramos, precioCentavos: producto.precioCentavos, tipoVenta: "peso" }) : null;
+
   function aceptarEscrito() {
-    const r = leerKilos(texto);
-    if (!r.ok) return setError(r.error);
-    onAceptar(r.gramos);
+    if (!leido.ok) return setError(leido.error);
+    onAceptar(leido.gramos);
   }
 
   return (
@@ -375,14 +392,32 @@ function DialogoPeso({
           ))}
         </div>
 
-        <label htmlFor="kilos" className="mt-4 block text-sm text-crema/80">Otra cantidad (kilos)</label>
+        <div role="group" aria-label="Cómo cargar la cantidad" className="mt-4 grid grid-cols-3 gap-1 rounded-lg bg-white/5 p-1 text-sm">
+          {MODOS.map((m) => (
+            <button key={m.valor} type="button" data-modo={m.valor} aria-pressed={modo === m.valor}
+              onClick={() => { setModo(m.valor); setTexto(""); setError(null); }}
+              className={`rounded-md py-2 transition ${modo === m.valor ? "bg-crema font-medium text-tinta" : "text-crema/75 hover:bg-white/5"}`}>
+              {m.etiqueta}
+            </button>
+          ))}
+        </div>
+        <label htmlFor="cantidad-manual" className="mt-3 block text-sm text-crema/80">{MODOS.find((m) => m.valor === modo)?.pregunta}</label>
         <input
-          id="kilos" autoFocus value={texto} onChange={(e) => { setTexto(e.target.value); setError(null); }}
+          id="cantidad-manual" autoFocus value={texto} onChange={(e) => { setTexto(e.target.value); setError(null); }}
           onKeyDown={(e) => e.key === "Enter" && aceptarEscrito()}
-          inputMode="decimal" autoComplete="off" placeholder="Ej.: 0,350"
+          inputMode={modo === "gramos" ? "numeric" : "decimal"} autoComplete="off" placeholder={MODOS.find((m) => m.valor === modo)?.ejemplo}
           className={`mt-1 w-full rounded-lg border bg-white/5 px-3 py-3 text-base outline-none focus:border-crema/60 ${error ? "border-red-400/70" : "border-crema/20"}`}
         />
-        {error && <p data-error="kilos" className="mt-1 text-sm text-red-300">{error}</p>}
+        {error && <p data-error="cantidad" className="mt-1 text-sm text-red-300">{error}</p>}
+        <p data-vista-previa aria-live="polite" className="mt-3 min-h-12 rounded-lg bg-white/[0.04] px-3 py-2 text-sm text-crema/70">
+          {leido.ok && subtotal !== null ? (
+            <>
+              {formatearCantidad(leido.gramos, "peso")} · <strong data-subtotal-previo className="text-lg tabular-nums text-crema">{formatearPesos(subtotal)}</strong>
+            </>
+          ) : (
+            "Escribí la cantidad y ves el total acá."
+          )}
+        </p>
 
         <div className="mt-4 flex gap-2">
           <button type="button" onClick={aceptarEscrito} className="flex-1 rounded-lg bg-crema px-4 py-3 font-medium text-tinta">

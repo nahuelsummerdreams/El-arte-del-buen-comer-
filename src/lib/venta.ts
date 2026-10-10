@@ -217,3 +217,34 @@ export function leerKilos(texto: string): ResultadoKilos {
     return { ok: false, error };
   }
 }
+
+/** Gramos escritos en el mostrador ("350") → gramos enteros. Solo números enteros: sin coma ni punto. */
+export function leerGramos(texto: string): ResultadoKilos {
+  const t = texto.trim();
+  if (t === "") return { ok: false, error: "Escribí cuántos gramos. Ejemplo: 350" };
+  if (!/^\d+$/.test(t)) return { ok: false, error: "Escribí solo números enteros, sin coma ni punto. Ejemplo: 350" };
+  const g = Number(t.replace(/^0+/, "") || "0");
+  if (g === 0) return { ok: false, error: "La cantidad debe ser mayor a cero." };
+  if (g > MAX_CANTIDAD_PESO) return { ok: false, error: "Máximo 1.000 kg por producto." };
+  return { ok: true, gramos: g };
+}
+
+/**
+ * "Dame $5.000 de jamón": los gramos más grandes cuyo subtotal NO supera el monto.
+ * Así nunca se cobra de más; si no alcanza ni para 1 g, devuelve error.
+ */
+export function gramosPorMonto(texto: string, precioKiloCentavos: number): ResultadoKilos {
+  if (texto.trim() === "") return { ok: false, error: "Escribí cuántos pesos. Ejemplo: 5000" };
+  let monto: number;
+  try {
+    monto = pesosACentavos(texto);
+  } catch {
+    return { ok: false, error: "Monto inválido. Ejemplo: 5000 o 5.000,50" };
+  }
+  if (monto < 1) return { ok: false, error: "El monto debe ser mayor a cero." };
+  if (!(precioKiloCentavos > 0)) return { ok: false, error: "Este producto no tiene precio cargado." };
+  let g = Math.min(Math.floor((monto * 1000) / precioKiloCentavos), MAX_CANTIDAD_PESO);
+  while (g > 0 && calcularSubtotal({ cantidad: g, precioCentavos: precioKiloCentavos, tipoVenta: "peso" }) > monto) g -= 1;
+  if (g < 1) return { ok: false, error: "Con ese monto no alcanza ni para 1 gramo." };
+  return { ok: true, gramos: g };
+}
